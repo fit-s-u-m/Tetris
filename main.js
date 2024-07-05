@@ -57,27 +57,25 @@ class Tetris {
 }
 
 class Grid {
-  constructor({ x, y }, { width, height }, size) {
+  constructor({ x, y }, { numRow, numCol }) {
     this.grid = []
+    const margin = numCol / numRow // add a little margin propotional to the number of cols
+    const size = (window.innerHeight / numRow) - margin
+
+    const width = numCol * size
+    const height = numRow * size
     this.position = { x: x - width / 2, y: y - height / 2 }
-    this.width = width
-    this.height = height
+    this.numRow = numRow
+    this.numCol = numCol
     this.size = size
   }
 
   createGrid() {
-    const numCols = Math.floor(this.width / this.size)
-    const numRows = Math.floor(this.height / this.size)
-    const offset = {  // to center if the grid is not a perfect square
-      x: this.width - numCols * this.size,
-      y: this.height - numRows * this.size
-    }
-
-    for (let i = 0; i < numCols; i++) {
+    for (let i = 0; i < this.numCol; i++) {
       this.grid[i] = []
-      for (let j = 0; j < numRows; j++) {
-        const x = this.position.x + (i * this.size) + offset.x / 2
-        const y = this.position.y + (j * this.size) + offset.y / 2
+      for (let j = 0; j < this.numRow; j++) {
+        const x = this.position.x + (i * this.size)
+        const y = this.position.y + (j * this.size)
         this.grid[i][j] = { x, y }
       }
     }
@@ -110,11 +108,9 @@ const main = async () => {
     background: '#fff',
     resizeTo: window
   })
-  const gridSize = 50
   const grid = new Grid(
     { x: app.screen.width / 2, y: app.screen.height / 2 },
-    { width: 500, height: 630 },
-    gridSize,
+    { numRow: 15, numCol: 10 },
   )
   const grids = grid.createGrid()
   const tetris = new Tetris()
