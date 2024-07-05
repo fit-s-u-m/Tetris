@@ -9,31 +9,39 @@ class Tetris {
     const Z = [[1, 1, 0], [0, 1, 1]]
     const J = [[1, 0, 0], [1, 1, 1]]
     const L = [[0, 0, 1], [1, 1, 1]]
-    const tetrisGrid = { 0: I, 1: O, 2: T, 3: S, 4: Z, 5: J, 6: L }
+    const tetrisGrid = {
+      0: { val: I, color: "#ff0000" },
+      1: { val: O, color: "#00ff00" },
+      2: { val: T, color: "#0000ff" },
+      3: { val: S, color: "#00ffff" },
+      4: { val: Z, color: "#ffff00" },
+      5: { val: J, color: "#ff00ff" },
+      6: { val: L, color: "#000000" }
+    }
     let rand = Math.floor(Math.random() * 7)
     this.tetris = tetrisGrid[rand] // choose random tetris
     this.tetrisDrawing = new PIXI.Container(); // create tetris container
   }
   showTetris(app, { x, y }, grid) {
     const cellSize = grid[1][0].x - grid[0][0].x
-    const numRow = this.tetris.length
+    const numRow = this.tetris.val.length
     // get pos from coordinate for starting point
     const gridX = grid[x][y].x
     const gridY = grid[x][y].y
 
     for (let i = 0; i < numRow; i++) { // for every row
 
-      const numCol = this.tetris[i].length
+      const numCol = this.tetris.val[i].length
       const tetrisYPos = gridY + i * cellSize
 
       for (let j = 0; j < numCol; j++) { // for every  column
 
         const tetrisXPos = gridX + j * cellSize
 
-        if (this.tetris[i][j] == 1) { // if that tetris have value 1 
+        if (this.tetris.val[i][j] == 1) { // if that tetris have value 1 
           const rect = new PIXI.Graphics()
             .rect(tetrisXPos, tetrisYPos, cellSize, cellSize)
-            .fill(0x000000);
+            .fill(this.tetris.color);
           this.tetrisDrawing.addChild(rect)
         }
       }
@@ -99,7 +107,7 @@ class Grid {
 const main = async () => {
   const app = new PIXI.Application()
   await app.init({
-    background: '#00ffff',
+    background: '#fff',
     resizeTo: window
   })
   const gridSize = 50
@@ -116,7 +124,7 @@ const main = async () => {
 
   tetris.showTetris(
     app,
-    { x: 1, y: 0 },
+    { x: 1, y: 0 }, // position in the grid
     grids
   )
   tetris2.showTetris(
@@ -130,7 +138,5 @@ const main = async () => {
   })
   document.body.appendChild(app.canvas);
 }
-
-
 main()
 
