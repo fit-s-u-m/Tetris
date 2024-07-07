@@ -18,30 +18,39 @@ class Tetris {
       5: { val: J, color: "#ff00ff" },
       6: { val: L, color: "#000000" }
     }
-    let rand = Math.floor(Math.random() * 7)
-    this.tetris = tetrisGrid[rand] // choose random tetris
+    this.tetris = {
+      now: null,
+      next: null
+    }
+
+    let rand1 = Math.floor(Math.random() * 7)
+    let rand2 = Math.floor(Math.random() * 7)
+    // choose random tetris
+    this.tetris.now = tetrisGrid[rand1]
+    this.tetris.next = tetrisGrid[rand2]
     this.tetrisDrawing = new PIXI.Container(); // create tetris container
   }
   showTetris(app, { x, y }, grid) {
     const cellSize = grid[1][0].x - grid[0][0].x
-    const numRow = this.tetris.val.length
+    const tetris_now = this.tetris.now
+    const numRow = tetris_now.val.length
     // get pos from coordinate for starting point
     const gridX = grid[x][y].x
     const gridY = grid[x][y].y
 
     for (let i = 0; i < numRow; i++) { // for every row
 
-      const numCol = this.tetris.val[i].length
+      const numCol = tetris_now.val[i].length
       const tetrisYPos = gridY + i * cellSize
 
       for (let j = 0; j < numCol; j++) { // for every  column
 
         const tetrisXPos = gridX + j * cellSize
 
-        if (this.tetris.val[i][j] == 1) { // if that tetris have value 1 
+        if (tetris_now.val[i][j] == 1) { // if that tetris have value 1 
           const rect = new PIXI.Graphics()
             .rect(tetrisXPos, tetrisYPos, cellSize, cellSize)
-            .fill(this.tetris.color);
+            .fill(tetris_now.color);
           this.tetrisDrawing.addChild(rect)
         }
       }
@@ -54,13 +63,16 @@ class Tetris {
   moveDown(dt, speed) {
     this.tetrisDrawing.position.y += dt * speed
   }
+  collidedWith(tetris) { //TODO
+    return  // return if collided 
+  }
 }
 
 class Grid {
-  constructor({ x, y }, { numRow, numCol }) {
+  constructor({ x, y }, { numRow, numCol }, maxHeight) {
     this.grid = []
     const margin = numCol / numRow // add a little margin propotional to the number of cols
-    const size = (window.innerHeight / numRow) - margin
+    const size = (maxHeight / numRow) - margin
 
     const width = numCol * size
     const height = numRow * size
@@ -108,29 +120,38 @@ const main = async () => {
     background: '#fff',
     resizeTo: window
   })
-  const grid = new Grid(
+  const mainGrid = new Grid(
     { x: app.screen.width / 2, y: app.screen.height / 2 },
     { numRow: 15, numCol: 10 },
+    window.innerHeight
   )
-  const grids = grid.createGrid()
-  const tetris = new Tetris()
-  const tetris2 = new Tetris()
+  const smallGrid = new Grid(
+    { x: app.screen.width / 2 + 400, y: app.screen.height / 2 },
+    { numRow: 4, numCol: 3 },
+    150
+  )
+  const nowGrid = mainGrid.createGrid()
+  const nextGrid = smallGrid.createGrid()
 
-  grid.showGrid(app)
+  const now = new Tetris()
+  const next = new Tetris()
 
-  tetris.showTetris(
+  mainGrid.showGrid(app)
+  smallGrid.showGrid(app)
+
+
+  now.showTetris(
     app,
     { x: 1, y: 0 }, // position in the grid
-    grids
+    nowGrid
   )
-  tetris2.showTetris(
+  next.showTetris(
     app,
-    { x: 4, y: 2 },
-    grids
+    { x: 0, y: 0 },
+    nextGrid
   )
   app.ticker.add(time => {
-    tetris.moveDown(time.deltaTime, 0.1)
-    tetris2.moveDown(time.deltaTime, 0.2)
+    now.moveDown(time.deltaTime, 0.1)
   })
   document.body.appendChild(app.canvas);
 }
