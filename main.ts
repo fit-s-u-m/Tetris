@@ -46,7 +46,6 @@ async function main() {
 	let currentBlock: Block, nextBlock: Block
 
 	renderer.setUp(() => {
-
 		mainGrid = new Grid({ x: 0.5, y: 0 }, 1, 10, 20, renderer)
 		sideGrid = new Grid({ x: 0.9, y: 0.5 }, 0.25, 4, 4, renderer)
 
@@ -75,14 +74,10 @@ async function main() {
 
 	})
 
-
-
 	renderer.gameLoop((_time) => {
+		mainGrid.checkIfRowIsFull()
 		if (mainGrid.blockLanded(currentBlock)) {
-
 			mainGrid.addBlock(currentBlock);
-			mainGrid.redraw()
-
 
 			removeEvents([ // clean event listener
 				{ obj: currentBlock, event: "resize" },
@@ -105,6 +100,10 @@ async function main() {
 				{ obj: currentBlock, event: "keyboard" },
 				{ obj: nextBlock, event: "resize" },
 			])
+		}
+		else if (mainGrid.reachTop()) {
+			console.log("reach the top")
+			return
 		}
 		else {
 			currentBlock.moveDown()

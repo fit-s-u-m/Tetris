@@ -12,3 +12,6 @@ export type GRID = Grid
 export type LISTENER = { obj: any, event: EVENT }[]
 export type CALLBACK = PIXI.TickerCallback<any>
 export type EVENTLISTENER = EventListener
+export type SIDE = "right" | "left" | "both"
+export type TIME = "now" | "future"
+export type BINARY = 0 | 1
