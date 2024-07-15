@@ -1,5 +1,5 @@
 import { EventObserver } from "./eventListener"
-import { GRID, PIXICONTAINER, RENDERER, EVENT } from "./types"
+import { GRID, PIXICONTAINER, RENDERER, EVENT, SCORE } from "./types"
 
 export abstract class Block implements EventObserver {
 	id: number
@@ -8,12 +8,13 @@ export abstract class Block implements EventObserver {
 	currentOrientation: { x: number, y: number }[] = []
 	container: PIXICONTAINER
 	private renderer: RENDERER
-	normalSpeed: number = 2
+	normalSpeed: number = 1
+	maxSpeed: number = 4
 	speed: number = this.normalSpeed
-	grid: GRID
+	protected grid: GRID
 	stageContainer(renderer: RENDERER) {
 		this.renderer = renderer
-		this.container = renderer.createContainer()
+		this.container = renderer.createContainer() // create a container at the start
 		renderer.stage(this.container)
 		this.currentOrientation = this.orientation[this.rotationState]
 	}
@@ -24,12 +25,20 @@ export abstract class Block implements EventObserver {
 			.forEach(pos => {
 				this.container.addChild(
 					this.renderer.
-						drawSquare(
+						drawRoundSquare(
 							grid.position.x + (pos.x * grid.cellSize),
 							grid.position.y + (pos.y * grid.cellSize),
 							grid.cellSize,
 							this.id))
 			})
+	}
+	checkLevel(score: SCORE) {
+		if (score.score % 50 == 0) {
+			this.levelUp
+		}
+	}
+	levelUp() {
+		this.speed += 1
 	}
 	redraw() {
 		this.container.removeChildren()
@@ -37,7 +46,7 @@ export abstract class Block implements EventObserver {
 		this.showBlock(this.grid)
 	}
 	// Calculate the block's coordinates on the grid
-	coordinate() {
+	coordinate(): { x: number, y: number }[] {
 		const blockPos = this.container.getGlobalPosition()
 		const blockCoord = {
 			x: blockPos.x / this.grid.cellSize,
@@ -57,12 +66,25 @@ export abstract class Block implements EventObserver {
 		})
 		return rectCoord
 	}
+	getRows(): Set<number> {
+		const rows = new Set<number>()
+		for (const rectCoord of this.coordinate()) {
+			rows.add(rectCoord.x)
+		}
+		return rows
+	}
+
+
+
 	destruct() {
 		this.container.destroy()
 	}
 
 
 	// movement
+	moveUp(speed: number) {
+		this.container.y -= speed
+	}
 	moveDown(speed: number = this.normalSpeed) {
 		this.speed = speed
 		this.container.y += this.speed
@@ -112,7 +134,7 @@ export abstract class Block implements EventObserver {
 					break
 				case "j":
 				case "ArrowDown":
-					this.moveDown(4)
+					this.moveDown(this.maxSpeed)
 					break
 				case "l":
 				case "ArrowRight":
