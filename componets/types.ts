@@ -4,6 +4,7 @@ import { Grid } from "./grid";
 import { EventListener } from "./eventListener";
 import { Score } from "./score";
 import *  as PIXI from "pixi.js"
+import * as PIXISOUND from "@pixi/sound"
 
 export type EVENT = "resize" | "keyboard"
 export type PIXICONTAINER = PIXI.Container
@@ -19,3 +20,4 @@ export type TIME = "now" | "future"
 export type BINARY = 0 | 1
 export type TEXT = PIXI.Text
 export type TEXTSTYLE = PIXI.TextStyle
+export type SOUND = PIXISOUND.Sound

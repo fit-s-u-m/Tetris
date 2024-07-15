@@ -15,6 +15,7 @@
   },
   "type": "module",
   "dependencies": {
+    "@pixi/sound": "^6.0.0",
     "pixi.js": "^8.2.1"
   }
 }

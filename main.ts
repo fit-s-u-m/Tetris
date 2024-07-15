@@ -5,10 +5,12 @@ import { TetrominoFactory } from "./componets/tetromino"
 import { EventListener } from "./componets/eventListener"
 import { LISTENER } from "./componets/types"
 import { Score } from "./componets/score"
+import { GameSound } from "./componets/sound.ts"
 
 const eventListener = new EventListener()
 const renderer = new Renderer()
 let score: Score
+let gameSound: GameSound
 let mainGrid: Grid, sideGrid: Grid
 let currentBlock: Block, nextBlock: Block
 
@@ -47,14 +49,16 @@ function startGame() {
 		{ obj: nextBlock, event: "resize" },
 		{ obj: score, event: "resize" },
 	])
+	// set up sound 
+	gameSound = new GameSound()
 
-	// set up sound
 	renderer.gameLoop(animation)
 }
 function animation() {
 
 	if (mainGrid.reachTop()) { // game over
 		currentBlock.container.visible = false
+		gameSound.gameOver.play()
 		mainGrid.drawSpiral({
 			whenFinshed: () => {
 				mainGrid.clear()
@@ -65,6 +69,7 @@ function animation() {
 	}
 	else if (mainGrid.blockLanded(currentBlock)) {
 		mainGrid.addBlock(currentBlock);
+		gameSound.collison()
 		// clear a row
 		let completed = 0
 		for (let row = mainGrid.numRow - 1; row > 0; row--) {
@@ -74,6 +79,7 @@ function animation() {
 				completed++
 				score.addPoint(10)
 				mainGrid.clearRow(row)
+				gameSound.score()
 			} else {
 				mainGrid.moveDownRow(row, completed)
 			}
