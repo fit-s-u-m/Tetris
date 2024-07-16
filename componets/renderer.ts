@@ -1,13 +1,11 @@
 import * as  PIXI from "pixi.js"
-import { CALLBACK } from "./types"
 import { Block } from "./block"
+import { Grid } from "./grid"
 
 
 export class Renderer {
 	private app: PIXI.Application
 	readonly color: string[]
-	private callback: CALLBACK
-	asset: PIXI.Sprite[]
 	constructor() {
 		this.color = [
 			"#FFFFFF",
@@ -17,20 +15,13 @@ export class Renderer {
 			"#ff7f00",
 			"#00ffff",
 			"#7f7f7f",
-			"#00A200"
+			"#00A200",
+			"#000000"
 		]
 		this.app = new PIXI.Application()
 	}
 	async initApp(bgColor: string) {
 		await this.app.init({ background: bgColor, resizeTo: window })
-		// const I = PIXI.Sprite.from("/assets/I.png")
-		// const T = PIXI.Sprite.from("/assets/T.png")
-		// const J = PIXI.Sprite.from("/assets/J.png")
-		// const L = PIXI.Sprite.from("/assets/L.png")
-		// const S = PIXI.Sprite.from("/assets/S.png")
-		// const Z = PIXI.Sprite.from("/assets/Z.png")
-		// const O = PIXI.Sprite.from("/assets/O.png")
-		// this.asset = [I, T, J, L, S, Z, O]
 	}
 	addAppToCanvas() {
 		document.body.appendChild(this.app.canvas)
@@ -47,10 +38,22 @@ export class Renderer {
 			.fill(this.color[c])
 			.stroke("#000")
 	}
-	drawSquare(x: number, y: number, s: number, c: number): PIXI.Graphics {
+	drawRoundRect(x: number, y: number, sx: number, sy: number, c: string): PIXI.Graphics {
+		return new PIXI.Graphics()
+			.roundRect(x, y, sx, sy, 10)
+			.fill(c)
+			.stroke("#000")
+	}
+	drawRect(x: number, y: number, sx: number, sy: number, c: string): PIXI.Graphics {
+		return new PIXI.Graphics()
+			.rect(x, y, sx, sy)
+			.fill(c)
+			.stroke("#000")
+	}
+	drawSquare(x: number, y: number, s: number, c: number, alpha: number = 1): PIXI.Graphics {
 		return new PIXI.Graphics()
 			.rect(x, y, s, s)
-			.fill(this.color[c])
+			.fill({ color: this.color[c], alpha })
 			.stroke("#000")
 	}
 	makeTextStyle(fontSize: number, color: string): PIXI.TextStyle {
@@ -59,9 +62,9 @@ export class Renderer {
 			fontSize: fontSize,
 			fontWeight: 'bold',
 			fill: color,
-			stroke: { color: '#4a1850', width: 5, join: 'round' },
+			stroke: { color: '#000', width: fontSize / 20, join: 'round' },
 			dropShadow: {
-				color: '#000000',
+				color: '#000',
 				blur: 3,
 				angle: Math.PI / 6,
 				distance: 3,
@@ -97,14 +100,12 @@ export class Renderer {
 			}
 			, time)
 	}
+	stopLoop(callback: PIXI.TickerCallback<any>) {
+		this.app.ticker.remove(callback)
+	}
 
 	update() {
 		this.app.ticker.update()
 	}
 
-	// setUp(callback: CALLBACK) {
-	// 	if (this.isTickerCallback(callback)) {
-	// 		this.app.ticker.addOnce(callback)
-	// 	}
-	// }
 }

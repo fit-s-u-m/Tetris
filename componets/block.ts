@@ -1,5 +1,5 @@
 import { EventObserver } from "./eventListener"
-import { GRID, PIXICONTAINER, RENDERER, EVENT, SCORE } from "./types"
+import { GRID, PIXICONTAINER, RENDERER, EVENT, SCORE, GAMESOUND } from "./types"
 
 export abstract class Block implements EventObserver {
 	id: number
@@ -12,10 +12,12 @@ export abstract class Block implements EventObserver {
 	maxSpeed: number = 4
 	speed: number = this.normalSpeed
 	protected grid: GRID
-	stageContainer(renderer: RENDERER) {
+	sound: GAMESOUND
+	stageContainer(renderer: RENDERER, sound: GAMESOUND) {
 		this.renderer = renderer
 		this.container = renderer.createContainer() // create a container at the start
 		renderer.stage(this.container)
+		this.sound = sound
 		this.currentOrientation = this.orientation[this.rotationState]
 	}
 
@@ -26,8 +28,8 @@ export abstract class Block implements EventObserver {
 				this.container.addChild(
 					this.renderer.
 						drawRoundSquare(
-							grid.position.x + (pos.x * grid.cellSize),
-							grid.position.y + (pos.y * grid.cellSize),
+							this.grid.position.x + (pos.x * this.grid.cellSize),
+							this.grid.position.y + (pos.y * this.grid.cellSize),
 							grid.cellSize,
 							this.id))
 			})
@@ -73,8 +75,12 @@ export abstract class Block implements EventObserver {
 		}
 		return rows
 	}
-
-
+	clone(block: Block) {
+		this.id = block.id
+		this.orientation = block.orientation
+		this.container.position.y = 0
+		this.redraw()
+	}
 
 	destruct() {
 		this.container.destroy()
@@ -115,8 +121,16 @@ export abstract class Block implements EventObserver {
 	rotateCW() {
 		this.rotationState === 3 ? this.rotationState = 0 : this.rotationState++
 		this.currentOrientation = this.orientation[this.rotationState]
-		// if collided after rotation undo the rotation
-		this.grid.blockLanded(this) || (this.grid.overSide(this, "both", "now")) ? this.rotateCCW() : this.redraw()
+		this.sound.playNote()
+		if (this.grid.blockLanded(this))
+			this.rotateCCW()  // undo
+		this.redraw()
+	}
+	kickRight() {
+		this.grid.overSide(this, "right", "now")
+	}
+	kickLeft() {
+
 	}
 
 	update(data: any, event: EVENT) {

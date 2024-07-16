@@ -13,6 +13,7 @@ export class Grid implements EventObserver {
 	fracMaxHeight: number
 	container: PIXICONTAINER
 	renderer: Renderer
+	shadowGrid: number[][]
 	protected spiralIteration = 0
 	protected spiralIndices: { i: number, j: number }[]
 
@@ -193,7 +194,7 @@ export class Grid implements EventObserver {
 	drawSpiral(calback: { whenFinshed: () => void; }) {
 		if (this.spiralIteration < this.numRow * this.numCol) {
 			const spiral = this.spiralIndices[this.spiralIteration]
-			const color = 4
+			const color = 8
 			this.grid[spiral.i][spiral.j] = color
 			this.redraw()
 			this.spiralIteration += 1
@@ -206,6 +207,12 @@ export class Grid implements EventObserver {
 	clear() {
 		for (let i = 0; i < this.numRow; i++) {
 			this.clearRow(i);
+		}
+		this.redraw()
+	}
+	colorAll(c: number) {
+		for (let i = 0; i < this.numRow; i++) {
+			this.colorRow(i, c);
 		}
 		this.redraw()
 	}

@@ -3,6 +3,7 @@ import { Block } from "./block";
 import { Grid } from "./grid";
 import { EventListener } from "./eventListener";
 import { Score } from "./score";
+import { GameSound } from "./sound";
 import *  as PIXI from "pixi.js"
 import * as PIXISOUND from "@pixi/sound"
 
@@ -21,3 +22,4 @@ export type BINARY = 0 | 1
 export type TEXT = PIXI.Text
 export type TEXTSTYLE = PIXI.TextStyle
 export type SOUND = PIXISOUND.Sound
+export type GAMESOUND = GameSound

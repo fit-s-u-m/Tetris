@@ -6,14 +6,18 @@ import { EventListener } from "./componets/eventListener"
 import { LISTENER } from "./componets/types"
 import { Score } from "./componets/score"
 import { GameSound } from "./componets/sound.ts"
+import { Button } from "./componets/ui.ts"
 
 const eventListener = new EventListener()
 const renderer = new Renderer()
 let score: Score
 let gameSound: GameSound
+let ui: Button
+
 let mainGrid: Grid, sideGrid: Grid
 let currentBlock: Block, nextBlock: Block
 
+let mute: boolean = false
 
 async function main() {
 	await renderer.initApp("#FFF")  // set background
@@ -24,23 +28,20 @@ function startGame() {
 	mainGrid = new Grid({ x: 0.5, y: 0 }, 1, 10, 20, renderer)
 	sideGrid = new Grid({ x: 0.9, y: 0.5 }, 0.25, 4, 4, renderer)
 
-	currentBlock = TetrominoFactory.createBlock()
-	nextBlock = TetrominoFactory.createBlock()
 	// show the grid
 	mainGrid.show()
 	sideGrid.show()
+	gameSound = new GameSound()
 
-	score = new Score({ x: 0.9, y: 0.1 }, currentBlock.id, renderer)
+	currentBlock = TetrominoFactory.createBlock()
+	nextBlock = TetrominoFactory.createBlock()
 
 	// add container to the app
-	currentBlock.stageContainer(renderer)
-	nextBlock.stageContainer(renderer)
+	currentBlock.stageContainer(renderer, gameSound)
+	nextBlock.stageContainer(renderer, gameSound)
 
-	// show the tetromino
-	currentBlock.showBlock(mainGrid)
-	nextBlock.showBlock(sideGrid)
+
 	setupEventListeners()
-
 	listenEvents([
 		{ obj: mainGrid, event: "resize" },
 		{ obj: sideGrid, event: "resize" },
@@ -50,22 +51,68 @@ function startGame() {
 		{ obj: score, event: "resize" },
 	])
 	// set up sound 
-	gameSound = new GameSound()
+	ui = new Button(renderer)
+	mainGrid.colorAll(8)// color grid black
+	ui.createTextButton({
+		yfrac: 0.4,
+		xfrac: 0.5,
+		text: "start",
+		size: 150,
+		color: "#fff",
+		calback: () => {
+			score = new Score({ x: 0.8, y: 0.1 }, currentBlock.id, renderer)
+			gameSound.startMusic()
+			currentBlock.showBlock(mainGrid)
+			nextBlock.showBlock(sideGrid)
+			renderer.gameLoop(animation)
+			mainGrid.clear()
+		}
+	}, true)
 
-	renderer.gameLoop(animation)
+	ui.createButton({
+		yfrac: 0.2,
+		xfrac: 0.1,
+		text: "mute",
+		size: 50,
+		color: { fg: "#fff", bg: "#AAA" },
+		calback: () => {
+			mute = !mute
+			if (mute)
+				gameSound.mute()
+			else
+				gameSound.unMute()
+			return mute
+		}
+	})
+
 }
 function animation() {
-
 	if (mainGrid.reachTop()) { // game over
 		currentBlock.container.visible = false
-		gameSound.gameOver.play()
+		currentBlock.speed = 0
+		nextBlock.container.visible = false
+		// gameSound.gameOver.play()
 		mainGrid.drawSpiral({
 			whenFinshed: () => {
-				mainGrid.clear()
-				score.subPoint(50)
-				currentBlock.container.visible = true
+				renderer.stopLoop(animation)
+				ui.createTextButton({
+					yfrac: 0.5,
+					xfrac: 0.5,
+					text: "restart",
+					size: 150,
+					color: "#fff",
+					calback: () => {
+						mainGrid.clear()
+						score.subPoint(100) // penality
+						currentBlock.container.visible = true
+						nextBlock.container.visible = true
+						currentBlock.speed = currentBlock.normalSpeed
+						renderer.gameLoop(animation)
+					}
+				}, true)
 			}
 		})
+
 	}
 	else if (mainGrid.blockLanded(currentBlock)) {
 		mainGrid.addBlock(currentBlock);
@@ -77,12 +124,14 @@ function animation() {
 
 			if (mainGrid.checkIfRowIsFull(row)) {
 				completed++
-				score.addPoint(10)
 				mainGrid.clearRow(row)
-				gameSound.score()
 			} else {
 				mainGrid.moveDownRow(row, completed)
 			}
+		}
+		if (completed != 0) {
+			score.calculateScore(completed, currentBlock)
+			gameSound.score()// make sound
 		}
 
 		removeEvents([ // clean event listener
@@ -91,16 +140,18 @@ function animation() {
 			{ obj: nextBlock, event: "resize" },
 		]);
 
-		currentBlock.destruct() // delete previous
-		currentBlock = TetrominoFactory.createBlock(nextBlock.id); // create a new from nextId
-		currentBlock.stageContainer(renderer); // stage the new container
+		currentBlock.clone(nextBlock)
+
+		currentBlock.destruct()
+		currentBlock = TetrominoFactory.createBlock(nextBlock.id);
+		currentBlock.stageContainer(renderer, gameSound);
 		currentBlock.showBlock(mainGrid)
 
 		score.changeColor(currentBlock.id) // match the current block color
 
 		nextBlock.destruct()
 		nextBlock = TetrominoFactory.createBlock();
-		nextBlock.stageContainer(renderer);
+		nextBlock.stageContainer(renderer, gameSound);
 		nextBlock.showBlock(sideGrid)
 
 		listenEvents([
