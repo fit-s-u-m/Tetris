@@ -95,11 +95,16 @@ export class Grid implements EventObserver {
 			return true
 		}
 		else {
+			let blockCoord: { x: number, y: number }[]
 			// collision with another tetromino
-			const margin = 0.01
-			block.moveDown(margin)
-			const blockCoord = block.coordinate()
-			block.moveUp(margin)
+			if (block.moveInStep) {
+				blockCoord = block.coordinate()
+			} else {
+				const margin = 0.01 // look ahead a marin
+				block.moveDown(margin)
+				blockCoord = block.coordinate()
+				block.moveUp(margin)
+			}
 			for (const rectCoord of blockCoord) {
 				if (!this.isEmptyCell(rectCoord.y + 1, rectCoord.x))  // if block is not empty
 					return true

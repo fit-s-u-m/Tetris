@@ -1,4 +1,4 @@
-import { BLOCK, RENDERER, TEXT, TEXTSTYLE } from "./types";
+import { BLOCK, EVENT, GAMESOUND, RENDERER, TEXT, TEXTSTYLE } from "./types";
 import { EventObserver } from "./eventListener";
 export class Score implements EventObserver {
 	scoreText: TEXT
@@ -31,7 +31,7 @@ export class Score implements EventObserver {
 		renderer.stage(this.numLineClearedText)
 		this.renderer = renderer
 	}
-	calculateScore(numLineCleared: number, block: BLOCK) {
+	calculateScore(numLineCleared: number, block: BLOCK, sound: GAMESOUND) {
 		let muliplier: number
 		if (numLineCleared == 1) {
 			muliplier = 40
@@ -48,8 +48,10 @@ export class Score implements EventObserver {
 		this.scoreText.text = `Score ${this.score += muliplier * (this.level + 1)}`
 		this.numLineCleared += numLineCleared
 		this.numLineClearedText.text = `line cleared ${this.numLineCleared}`
+		sound.score()
 		if (this.numLineCleared % 10 == 0) {
 			block.normalSpeed += this.level
+			sound.levelUp()
 			this.levelUP()
 		}
 	}
@@ -66,7 +68,7 @@ export class Score implements EventObserver {
 	levelUP() {
 		this.levelText.text = `Level ${++this.level}`
 	}
-	update(data: any, event: string): void {
+	update(data: any, event: EVENT): void {
 		if (event == "resize") {
 			const xpos = this.fracPos.x * data.w - this.fontSize
 			const ypos = this.fracPos.y * data.h
@@ -75,6 +77,11 @@ export class Score implements EventObserver {
 			this.scoreText.x = xpos
 			this.scoreText.y = ypos
 			this.scoreText.style = this.scoreTextStyle
+
+			this.levelTextStyle = this.renderer.makeTextStyle(this.fontSize, "white")
+			this.levelText.x = xpos
+			this.levelText.y = ypos + this.fontSize
+			this.levelText.style = this.levelTextStyle
 		}
 	}
 	changeColor(color: number) {

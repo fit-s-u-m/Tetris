@@ -8,11 +8,13 @@ export abstract class Block implements EventObserver {
 	currentOrientation: { x: number, y: number }[] = []
 	container: PIXICONTAINER
 	private renderer: RENDERER
-	normalSpeed: number = 1
-	maxSpeed: number = 4
+	normalSpeed: number = 2
+	maxSpeed: number = this.normalSpeed * 3
 	speed: number = this.normalSpeed
 	protected grid: GRID
 	sound: GAMESOUND
+	moveInStep = false
+	blockCoord: { x: number, y: number } = { x: 0, y: 0 }
 	stageContainer(renderer: RENDERER, sound: GAMESOUND) {
 		this.renderer = renderer
 		this.container = renderer.createContainer() // create a container at the start
@@ -23,6 +25,16 @@ export abstract class Block implements EventObserver {
 
 	showBlock(grid: GRID) {
 		this.grid = grid
+		if (this.moveInStep) {
+			this.normalSpeed = this.grid.cellSize
+			this.maxSpeed = 2 * this.grid.cellSize
+		}
+		else {
+			this.normalSpeed = 2
+			this.maxSpeed = 5
+			this.speed = this.normalSpeed
+		}
+
 		this.orientation[this.rotationState]
 			.forEach(pos => {
 				this.container.addChild(
@@ -41,6 +53,8 @@ export abstract class Block implements EventObserver {
 	}
 	levelUp() {
 		this.speed += 1
+		this.normalSpeed += 1
+		this.maxSpeed += 1
 	}
 	redraw() {
 		this.container.removeChildren()
@@ -49,16 +63,29 @@ export abstract class Block implements EventObserver {
 	}
 	// Calculate the block's coordinates on the grid
 	coordinate(): { x: number, y: number }[] {
-		const blockPos = this.container.getGlobalPosition()
-		const blockCoord = {
-			x: blockPos.x / this.grid.cellSize,
-			y: blockPos.y / this.grid.cellSize
+		let blockCoord: { x: number, y: number }
+		if (this.moveInStep) {
+			blockCoord = this.blockCoord
+		} else {
+			const blockPos = this.container.getGlobalPosition()
+			blockCoord = {
+				x: blockPos.x / this.grid.cellSize,
+				y: blockPos.y / this.grid.cellSize
+			}
 		}
 
 		let rectCoord: { x: number, y: number }[] = []
 		this.currentOrientation.forEach(rectOffset => {
-			const rectPosX = Math.round(blockCoord.x) + rectOffset.x
-			const rectPosY = Math.round(blockCoord.y) + rectOffset.y
+			let rectPosX: number
+			let rectPosY: number
+			if (this.moveInStep) {
+				rectPosX = Math.floor(blockCoord.x) + rectOffset.x
+				rectPosY = Math.floor(blockCoord.y) + rectOffset.y
+			}
+			else {
+				rectPosX = Math.round(blockCoord.x) + rectOffset.x
+				rectPosY = Math.round(blockCoord.y) + rectOffset.y
+			}
 			rectCoord.push(
 				{
 					x: rectPosX,
@@ -88,49 +115,65 @@ export abstract class Block implements EventObserver {
 
 
 	// movement
-	moveUp(speed: number) {
-		this.container.y -= speed
-	}
 	moveDown(speed: number = this.normalSpeed) {
 		this.speed = speed
 		this.container.y += this.speed
+		this.speed = this.normalSpeed
+		if (this.moveInStep)
+			this.blockCoord.y += 1
+	}
+	moveUp(x: number) {
+		this.speed = x
+		this.container.y -= this.speed
 		this.speed = this.normalSpeed
 	}
 	moveDownAStep() {
 		this.container.y += this.grid.cellSize
 	}
-	moveUpAStep() {
-		this.container.y -= this.grid.cellSize
-	}
 	moveLeft() {
 		if (!this.grid.overSide(this, "left") && !this.grid.blockLanded(this)) {
+			this.sound.playNote()
 			this.container.x -= this.grid.cellSize // move
+			if (this.moveInStep) { // if it is moveing stepwise
+				this.blockCoord.x -= 1
+			}
 		}
 	}
 	moveRight() {
 		if (!this.grid.overSide(this, "right") && !this.grid.blockLanded(this)) {
+			this.sound.playNote()
 			this.container.x += this.grid.cellSize
+			if (this.moveInStep) { // if it is moveing stepwise
+				this.blockCoord.x += 1
+			}
 		}
 	}
 
 	// rotation
 	rotateCCW() {
 		this.rotationState == 0 ? this.rotationState = 3 : this.rotationState--
+		this.currentOrientation = this.orientation[this.rotationState]
 		this.redraw()
 	}
 	rotateCW() {
+		this.sound.playNote()
 		this.rotationState === 3 ? this.rotationState = 0 : this.rotationState++
 		this.currentOrientation = this.orientation[this.rotationState]
-		this.sound.playNote()
-		if (this.grid.blockLanded(this))
-			this.rotateCCW()  // undo
+
+		if (this.grid.blockLanded(this) || this.grid.overSide(this, "both"))
+			this.rotateCCW();  // undo if wall kick fails
 		this.redraw()
 	}
 	kickRight() {
-		this.grid.overSide(this, "right", "now")
+		while (this.grid.overSide(this, "left")) {
+			// console.log("kick right")
+			this.moveRight()
+		}
 	}
 	kickLeft() {
-
+		while (this.grid.overSide(this, "right")) {
+			this.moveLeft()
+		}
 	}
 
 	update(data: any, event: EVENT) {

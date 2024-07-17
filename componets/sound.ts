@@ -5,13 +5,16 @@ export class GameSound {
 	gameOver: PIXI.Sound
 	levelCompleted: PIXI.Sound
 	notes: PIXI.Sound
+	collectPoint: PIXI.Sound
 	notePosition: number = 1
 
 	constructor() {
-		this.homeTheme = PIXI.sound.add("home-theme", "/assets/sound/tetris theme.mp3")
+		this.homeTheme = PIXI.sound.add("home-theme", "/assets/sound/home.mp3")
 
 		this.crash = PIXI.sound.add("crash", "/assets/sound/ding.mp3")
 		this.crash.volume = 0.01
+
+		this.collectPoint = PIXI.sound.add("score", "/assets/sound/collect-points.mp3")
 
 		this.gameOver = PIXI.sound.add("game-over", "/assets/sound/game-over-arcade.mp3")
 		this.levelCompleted = PIXI.sound.add("level-completed", "/assets/sound/level-completed.mp3")
@@ -44,10 +47,10 @@ export class GameSound {
 			'25': { start: 11.9, end: 12.2 },
 		}
 		this.notes = PIXI.Sound.from({
-			url: "../public/assets/sound/piano.wav",
+			url: "/assets/sound/piano.wav",
 			sprites: spirtes
 		})
-		this.notes.volume = 0.1
+		this.notes.volume = 0.2
 
 	}
 	startMusic() {
@@ -66,6 +69,9 @@ export class GameSound {
 		this.crash.play()
 	}
 	score() {
+		this.collectPoint.play()
+	}
+	levelUp() {
 		this.levelCompleted.play()
 	}
 	playNote() {

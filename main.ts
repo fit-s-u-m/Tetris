@@ -35,13 +35,13 @@ function startGame() {
 
 	currentBlock = TetrominoFactory.createBlock()
 	nextBlock = TetrominoFactory.createBlock()
-
+	// currentBlock.moveInStep = true
+	score = new Score({ x: 0.8, y: 0.1 }, currentBlock.id, renderer)
 	// add container to the app
 	currentBlock.stageContainer(renderer, gameSound)
 	nextBlock.stageContainer(renderer, gameSound)
-
-
 	setupEventListeners()
+
 	listenEvents([
 		{ obj: mainGrid, event: "resize" },
 		{ obj: sideGrid, event: "resize" },
@@ -60,7 +60,6 @@ function startGame() {
 		size: 150,
 		color: "#fff",
 		calback: () => {
-			score = new Score({ x: 0.8, y: 0.1 }, currentBlock.id, renderer)
 			gameSound.startMusic()
 			currentBlock.showBlock(mainGrid)
 			nextBlock.showBlock(sideGrid)
@@ -88,10 +87,11 @@ function startGame() {
 }
 function animation() {
 	if (mainGrid.reachTop()) { // game over
+		gameSound.homeTheme.stop()
 		currentBlock.container.visible = false
 		currentBlock.speed = 0
 		nextBlock.container.visible = false
-		// gameSound.gameOver.play()
+		gameSound.gameOver.play()
 		mainGrid.drawSpiral({
 			whenFinshed: () => {
 				renderer.stopLoop(animation)
@@ -130,7 +130,7 @@ function animation() {
 			}
 		}
 		if (completed != 0) {
-			score.calculateScore(completed, currentBlock)
+			score.calculateScore(completed, currentBlock, gameSound)
 			gameSound.score()// make sound
 		}
 
@@ -140,12 +140,12 @@ function animation() {
 			{ obj: nextBlock, event: "resize" },
 		]);
 
-		currentBlock.clone(nextBlock)
 
 		currentBlock.destruct()
 		currentBlock = TetrominoFactory.createBlock(nextBlock.id);
 		currentBlock.stageContainer(renderer, gameSound);
 		currentBlock.showBlock(mainGrid)
+		// currentBlock.moveInStep = true
 
 		score.changeColor(currentBlock.id) // match the current block color
 
