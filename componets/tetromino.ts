@@ -3,7 +3,7 @@ import { EVENT, GRID, RENDERER } from "./types"
 import { tetrominoShapes } from "../util/tetrominoData"
 
 export class MainBlock extends Block {
-	normalSpeed: number = 2
+	normalSpeed: number = 1
 	maxSpeed: number = 5
 	speed: number = this.normalSpeed
 	rotationState: 0 | 1 | 2 | 3 = 0

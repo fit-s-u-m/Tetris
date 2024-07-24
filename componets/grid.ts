@@ -2,6 +2,7 @@ import { Renderer } from "./renderer"
 import { EventObserver } from "./eventListener"
 import { BLOCK, PIXICONTAINER, SIDE, TIME, BINARY, POSITION } from "./types"
 
+
 export class Grid implements EventObserver {
 	numCol: number
 	numRow: number
@@ -14,6 +15,8 @@ export class Grid implements EventObserver {
 	container: PIXICONTAINER
 	renderer: Renderer
 	shadowGrid: number[][]
+	clearRowIndex = 0
+	moveDownIndex = 0
 	protected spiralIteration = 0
 	protected spiralIndices: { i: number, j: number }[]
 
@@ -127,18 +130,18 @@ export class Grid implements EventObserver {
 		this.redraw()
 
 	}
-	async clearEntireRow(row: number, color: number = 0) {
+	async clearEntireRow(row: number) {
 		for (let i = 0; i < this.numCol; i++) {
-			this.grid[row][i] = color; // set to empty
+			this.grid[row][i] = 0; // set to empty
+			await this.sleep(40)
 			this.redraw();
-			await this.sleep(100); // Adjust the delay (in milliseconds) as needed
+			this.renderer.updateLoop()
 		}
 	}
 	sleep(ms: number) {
 		return new Promise(resolve => setTimeout(resolve, ms));
 	}
 	clearRow(row: number) {
-		// this.renderer.delayGame(10)
 		this.colorRow(row, 0)
 	}
 	checkIfRowIsFull(row: number) {
@@ -154,10 +157,13 @@ export class Grid implements EventObserver {
 			for (let i = 0; i < this.numCol; i++) {
 				const rowToMove = this.grid[rowIndex][i]
 				this.grid[rowIndex + num][i] = rowToMove
-				await this.sleep(100)
 			}
 			this.clearRow(rowIndex)
+			this.redraw()
+			this.renderer.updateLoop()
+			await this.sleep(30);
 		}
+
 	}
 	reachTop() {
 		const row = this.grid[0]

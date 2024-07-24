@@ -112,6 +112,7 @@ export class Tetris implements EventObserver {
 		this.currentBlock.speed = 0
 		this.nextBlock.container.visible = false
 		this.gameSound.gameOver.play()
+		this.score.subPoint(100) // penality
 		this.mainGrid.drawSpiral({
 			whenFinshed: () => {
 				this.renderer.stopLoop(this.gameLoop, this)
@@ -123,7 +124,6 @@ export class Tetris implements EventObserver {
 					color: { fg: "#FFF", bg: "#fff" },
 					onClick: () => {
 						this.mainGrid.clear()
-						this.score.subPoint(100) // penality
 						this.currentBlock.container.visible = true
 						this.nextBlock.container.visible = true
 						this.ghostBlock.container.visible = true
@@ -159,16 +159,17 @@ export class Tetris implements EventObserver {
 		for (let row = this.mainGrid.numRow - 1; row > 0; row--) { // for every row starting from bottom
 			if (this.mainGrid.isEmptyRow(row)) break
 
-			const asyncClear = async () => {
-				if (this.mainGrid.checkIfRowIsFull(row)) {
-					completed++
-					// this.particle.start({ x: 0, y: row * this.mainGrid.cellSize })
-					this.mainGrid.clearEntireRow(row)
-				} else {
-					this.mainGrid.moveDownRow(row, completed)
-				}
+			if (this.mainGrid.checkIfRowIsFull(row)) {
+				completed++
+				this.renderer.pauseLoop()
+				// this.particle.start({ x: this.mainGrid.container.x, y: row * this.mainGrid.cellSize })
+				await this.mainGrid.clearEntireRow(row)
+				this.renderer.startLoop()
+			} else if (completed > 0) {
+				this.renderer.pauseLoop()
+				await this.mainGrid.moveDownRow(row, completed)
+				this.renderer.startLoop()
 			}
-			await asyncClear()
 
 		}
 		if (completed != 0) {
@@ -213,6 +214,10 @@ export class Tetris implements EventObserver {
 			switch (data) {
 				case " ":
 					this.hardPress(true)
+					break
+				case "Enter":
+					// this.renderer.startLoop()
+					this.startGame()
 					break
 
 			}

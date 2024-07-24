@@ -115,6 +115,9 @@ export class Renderer implements EventObserver {
 	startLoop() {
 		this.app.ticker.start()
 	}
+	updateLoop() {
+		this.app.ticker.update()
+	}
 	update(data: any, event: EVENT): void {
 		if (event == "keyboard") {
 			switch (data) {
