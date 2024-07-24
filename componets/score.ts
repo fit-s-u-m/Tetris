@@ -82,6 +82,8 @@ export class Score implements EventObserver {
 			this.levelText.x = xpos
 			this.levelText.y = ypos + this.fontSize
 			this.levelText.style = this.levelTextStyle
+
+			this.numLineClearedText.style = this.levelTextStyle
 		}
 	}
 	changeColor(color: number) {

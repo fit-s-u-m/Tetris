@@ -1,6 +1,6 @@
 import { Renderer } from "./renderer"
 import { EventObserver } from "./eventListener"
-import { BLOCK, PIXICONTAINER, SIDE, TIME, BINARY } from "./types"
+import { BLOCK, PIXICONTAINER, SIDE, TIME, BINARY, POSITION } from "./types"
 
 export class Grid implements EventObserver {
 	numCol: number
@@ -73,7 +73,8 @@ export class Grid implements EventObserver {
 	}
 	isEmptyCell(row: number, col: number) {
 		if (row > this.numRow - 1) return false
-		return this.grid[row][col] == 0
+		if (col > this.numCol - 1) return false
+		return (this.grid[row][col] == 0 || this.grid[row][col] == 8)
 	}
 	isEmptyRow(row: number) {
 		if (row > this.numRow - 1) return false
@@ -85,44 +86,35 @@ export class Grid implements EventObserver {
 		return true
 
 	}
-
-	blockLanded(block: BLOCK) {
+	blockLanded(block: BLOCK, offset: POSITION) {
 		// landed on the grid
 		const gridHeight = this.cellSize_ * this.numRow
 		const groundPos = this.container.getGlobalPosition().y + gridHeight
 		const blockPos = block.container.getGlobalPosition().y + block.container.getSize().height
-		if (blockPos >= groundPos) {
+		if (blockPos >= groundPos)
 			return true
+		else { // collision with another tetromino
+			const blockCoord = block.coordinate()
+			return this.checkBlockIsOnAnother(blockCoord, offset)
 		}
-		else {
-			let blockCoord: { x: number, y: number }[]
-			// collision with another tetromino
-			if (block.moveInStep) {
-				blockCoord = block.coordinate()
-			} else {
-				const margin = 0.01 // look ahead a marin
-				block.moveDown(margin)
-				blockCoord = block.coordinate()
-				block.moveUp(margin)
-			}
-			for (const rectCoord of blockCoord) {
-				if (!this.isEmptyCell(rectCoord.y + 1, rectCoord.x))  // if block is not empty
-					return true
-			}
+	}
+	checkBlockIsOnAnother(blockCoord: { x: number, y: number }[], offset: POSITION) {
+		for (const rectCoord of blockCoord) {
+			if (!this.isEmptyCell(
+				rectCoord.y + offset.y,
+				rectCoord.x + offset.x
+			))
+				return true
 		}
 		return false
 	}
 
-	overSide(block: BLOCK, side: SIDE = "both", checkFor: TIME = "future") {
-		const needsOne: BINARY = checkFor == "future" ? 1 : 0
-		if (side == "left" || side == "both") {
-			const outToLeft = block.coordinate().filter(rectCoord => rectCoord.x - needsOne < 0) // -1 to check for the next(future) block pos
-			return outToLeft.length != 0
-		}
-		if (side == "right" || side == "both") {
-			const outToRight = block.coordinate().filter(rectCoord => rectCoord.x + needsOne > this.numCol - 1)  // +1 to check for the next(future) block pos
-			return outToRight.length != 0
-		}
+	overSide(block: BLOCK, offset: POSITION) {
+		const outToLeft = block.coordinate().filter(rectCoord => rectCoord.x + offset.x < 0) // -1 to check for the next(future) block pos
+		return outToLeft.length != 0
+	}
+	isValidPosition(block: BLOCK, offset: POSITION) {
+		return !(this.overSide(block, offset) || this.blockLanded(block, offset))
 	}
 	colorGrid(row: number, col: number, color: number) {
 		this.grid[row][col] = color
@@ -135,7 +127,18 @@ export class Grid implements EventObserver {
 		this.redraw()
 
 	}
+	async clearEntireRow(row: number, color: number = 0) {
+		for (let i = 0; i < this.numCol; i++) {
+			this.grid[row][i] = color; // set to empty
+			this.redraw();
+			await this.sleep(100); // Adjust the delay (in milliseconds) as needed
+		}
+	}
+	sleep(ms: number) {
+		return new Promise(resolve => setTimeout(resolve, ms));
+	}
 	clearRow(row: number) {
+		// this.renderer.delayGame(10)
 		this.colorRow(row, 0)
 	}
 	checkIfRowIsFull(row: number) {
@@ -146,11 +149,12 @@ export class Grid implements EventObserver {
 		}
 		return true
 	}
-	moveDownRow(rowIndex: number, num: number) {
+	async moveDownRow(rowIndex: number, num: number) {
 		if (num > 0) {
 			for (let i = 0; i < this.numCol; i++) {
 				const rowToMove = this.grid[rowIndex][i]
 				this.grid[rowIndex + num][i] = rowToMove
+				await this.sleep(100)
 			}
 			this.clearRow(rowIndex)
 		}

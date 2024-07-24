@@ -1,11 +1,13 @@
 import * as  PIXI from "pixi.js"
 import { Block } from "./block"
-import { Grid } from "./grid"
+import { EventObserver } from "./eventListener"
+import { EVENT } from "./types"
 
 
-export class Renderer {
+export class Renderer implements EventObserver {
 	private app: PIXI.Application
 	readonly color: string[]
+	private isPaused = false
 	constructor() {
 		this.color = [
 			"#FFFFFF",
@@ -32,11 +34,11 @@ export class Renderer {
 	createContainer() {
 		return new PIXI.Container()
 	}
-	drawRoundSquare(x: number, y: number, s: number, c: number): PIXI.Graphics {
+	drawRoundSquare(x: number, y: number, s: number, c: number, alpha: number = 1): PIXI.Graphics {
 		return new PIXI.Graphics()
 			.roundRect(x, y, s, s, 5)
-			.fill(this.color[c])
-			.stroke("#000")
+			.fill({ color: this.color[c], alpha })
+			.stroke({ color: "#000", width: 1.1 })
 	}
 	drawRoundRect(x: number, y: number, sx: number, sy: number, c: string): PIXI.Graphics {
 		return new PIXI.Graphics()
@@ -83,29 +85,51 @@ export class Renderer {
 
 	}
 
-
-	gameLoop(callback: PIXI.TickerCallback<any>) {
-		this.app.ticker.autoStart = false;
-		this.app.ticker.add(callback)
-		// window.requestAnimationFrame(callback);
+	drawCircle(x: number, y: number, r: number, c: number) {
+		return new PIXI.Graphics()
+			.circle(x, y, r)
+			.fill(this.color[c])
 	}
-	delayGame(time: number, block: Block) {
+
+	gameLoop(callback: PIXI.TickerCallback<any>, context: any) {
+		this.app.ticker.autoStart = false;
+		this.app.ticker.add(callback, context)
+	}
+	delayGame(time: number) {
 		this.app.ticker.stop()
-		block.speed = 0
+		// block.speed = 0
 
 		setTimeout(
 			() => {
 				this.app.ticker.start()
-				block.speed = 0
+				// block.speed = 0
 			}
 			, time)
 	}
-	stopLoop(callback: PIXI.TickerCallback<any>) {
-		this.app.ticker.remove(callback)
+	stopLoop(callback: PIXI.TickerCallback<any>, context: any) {
+		this.app.ticker.remove(callback, context)
 	}
-
-	update() {
-		this.app.ticker.update()
+	pauseLoop() {
+		this.app.ticker.stop()
 	}
-
+	startLoop() {
+		this.app.ticker.start()
+	}
+	update(data: any, event: EVENT): void {
+		if (event == "keyboard") {
+			switch (data) {
+				case "p":
+					if (this.isPaused) {
+						this.startLoop()
+						// this.sound.homeTheme.play()
+					}
+					else {
+						// this.sound.homeTheme.stop()
+						this.pauseLoop()
+					}
+					this.isPaused = !this.isPaused
+					break
+			}
+		}
+	}
 }

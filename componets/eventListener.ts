@@ -1,6 +1,6 @@
 import { EVENT } from "./types"
 export interface EventObserver {
-	update(data: any, event: string): void
+	update(data: any, event: EVENT): void
 }
 export class EventListener {
 	private resizeObservers: EventObserver[] = []
