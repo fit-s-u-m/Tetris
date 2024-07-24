@@ -31,8 +31,8 @@ The game use super rotation System ([SRS](https://harddrop.com/wiki/SRS)) so you
    - **Arrow dowm** to increase the speed to move
    - **Space** to hard drop the tetromino
    - **P** to pause the game
-   - **Z ** to rotate the tetromino counter clockwise
-   - **X ** to rotate the tetromino clockwise
+   - **Z** to rotate the tetromino counter clockwise
+   - **X** to rotate the tetromino clockwise
 -  If you are a vim user and hate the arrow keys 
    - **h** and **l**  to move the block side to side
    - **k** to rotate the tetromino
