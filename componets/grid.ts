@@ -30,6 +30,7 @@ export class Grid implements EventObserver {
 
 		this.init()
 		this.renderer = renderer
+		this.spiralIteration = 0
 
 
 		this.fracPosition = { x, y }
@@ -133,7 +134,7 @@ export class Grid implements EventObserver {
 	async clearEntireRow(row: number) {
 		for (let i = 0; i < this.numCol; i++) {
 			this.grid[row][i] = 0; // set to empty
-			await this.sleep(40)
+			await this.sleep(20)
 			this.redraw();
 			this.renderer.updateLoop()
 		}
@@ -161,7 +162,7 @@ export class Grid implements EventObserver {
 			this.clearRow(rowIndex)
 			this.redraw()
 			this.renderer.updateLoop()
-			await this.sleep(30);
+			await this.sleep(10);
 		}
 
 	}
@@ -217,6 +218,7 @@ export class Grid implements EventObserver {
 		else {
 			this.spiralIteration = 0
 			calback.whenFinshed()
+			return
 		}
 	}
 	clear() {

@@ -26,3 +26,6 @@ export type GAMESOUND = GameSound
 export type BUTTONTYPE = "text-only" | "text-with-rect"
 export type BLOCKTYPE = "ghost" | "preview" | "main"
 export type POSITION = { x: number, y: number }
+export type MESH = PIXI.Mesh
+export type GEOMETERY = PIXI.Geometry
+export type SHADER = PIXI.Shader

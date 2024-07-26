@@ -25,14 +25,13 @@ export class Tetris implements EventObserver {
 		this.eventListener = new EventListener()
 		this.renderer = new Renderer()
 		this.gameSound = new GameSound()
-		this.particle = new Particles(this.renderer)
 		this.init()
 	}
 	private async init() {
-		await this.renderer.initApp("#FFF")  // set background
+		await this.renderer.initApp()  // set background
 		this.renderer.addAppToCanvas() // append app.canvas
 	}
-	startGame() {
+	async startGame() {
 		this.mainGrid = new Grid({ x: 0.5, y: 0 }, 1, 10, 20, this.renderer)
 		this.previewGrid = new Grid({ x: 0.9, y: 0.5 }, 0.25, 4, 4, this.renderer)
 
@@ -43,6 +42,8 @@ export class Tetris implements EventObserver {
 		this.currentBlock = new MainBlock(this.renderer)
 		this.ghostBlock = new GhostBlock(this.currentBlock)
 		this.currentBlock.setShadow(this.ghostBlock)
+		this.particle = new Particles()
+		await this.particle.init()
 
 		this.score = new Score({ x: 0.8, y: 0.1 }, this.currentBlock.id, this.renderer)
 
@@ -103,19 +104,20 @@ export class Tetris implements EventObserver {
 		else {
 			this.currentBlock.moveDown()
 		}
-
 	}
 	gameOver() {
 		this.gameSound.homeTheme.stop()
 		this.currentBlock.container.visible = false
 		this.ghostBlock.container.visible = false
-		this.currentBlock.speed = 0
 		this.nextBlock.container.visible = false
+
+		this.currentBlock.speed = 0
 		this.gameSound.gameOver.play()
 		this.score.subPoint(100) // penality
 		this.mainGrid.drawSpiral({
 			whenFinshed: () => {
 				this.renderer.stopLoop(this.gameLoop, this)
+				this.mainGrid.container.visible = false
 				const restartButton = new Button(this.renderer, "text-only", {
 					yfrac: 0.5,
 					xfrac: 0.5,
@@ -127,6 +129,7 @@ export class Tetris implements EventObserver {
 						this.currentBlock.container.visible = true
 						this.nextBlock.container.visible = true
 						this.ghostBlock.container.visible = true
+						this.mainGrid.container.visible = true
 						this.currentBlock.speed = this.currentBlock.normalSpeed
 						this.renderer.gameLoop(this.gameLoop, this)
 					}
@@ -137,7 +140,7 @@ export class Tetris implements EventObserver {
 			}
 		})
 	}
-	newGeneration() {
+	async newGeneration() {
 		if (this.hardPressed) {
 			this.mainGrid.addBlock(this.ghostBlock);
 			this.hardPress(true)// toogle is back off
@@ -147,25 +150,25 @@ export class Tetris implements EventObserver {
 
 		this.gameSound.collison()
 		// clear a row
-		this.clearRow() // check and clear row
+		await this.clearRow() // check and clear row
 
 		this.currentBlock.createNew(this.nextBlock)
 		this.ghostBlock.shadow()
 		this.nextBlock.createNew()
 		this.score.changeColor(this.currentBlock.id) // match the current block color
+
 	}
 	private async clearRow() {
 		let completed = 0
 		for (let row = this.mainGrid.numRow - 1; row > 0; row--) { // for every row starting from bottom
 			if (this.mainGrid.isEmptyRow(row)) break
-
 			if (this.mainGrid.checkIfRowIsFull(row)) {
 				completed++
 				this.renderer.pauseLoop()
-				// this.particle.start({ x: this.mainGrid.container.x, y: row * this.mainGrid.cellSize })
 				await this.mainGrid.clearEntireRow(row)
 				this.renderer.startLoop()
 			} else if (completed > 0) {
+				this.particle.drawWin()
 				this.renderer.pauseLoop()
 				await this.mainGrid.moveDownRow(row, completed)
 				this.renderer.startLoop()
@@ -176,18 +179,13 @@ export class Tetris implements EventObserver {
 			this.score.calculateScore(completed, this.currentBlock, this.gameSound)
 			this.gameSound.score()// make sound
 		}
+		return completed
 	}
 	private listenEvents(listeners: LISTENER) {
 		for (const listener of listeners) {
 			this.eventListener.addEventObserver(listener.obj, listener.event);
 		}
 	}
-	private removeEvents(listeners: LISTENER) {
-		for (const listener of listeners) {
-			this.eventListener.removeEventObserver(listener.obj, listener.event);
-		}
-	}
-
 	private setupEventListeners() {
 
 		// initalize  listeners

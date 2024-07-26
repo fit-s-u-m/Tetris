@@ -1,16 +1,16 @@
 import * as  PIXI from "pixi.js"
 import { Block } from "./block"
 import { EventObserver } from "./eventListener"
-import { EVENT } from "./types"
+import { EVENT, POSITION } from "./types"
 
 
 export class Renderer implements EventObserver {
-	private app: PIXI.Application
+	app: PIXI.Application
 	readonly color: string[]
 	private isPaused = false
 	constructor() {
 		this.color = [
-			"#FFFFFF",
+			"#222222",
 			"#FD3F59",
 			"#800080",
 			"#ffff00",
@@ -22,8 +22,8 @@ export class Renderer implements EventObserver {
 		]
 		this.app = new PIXI.Application()
 	}
-	async initApp(bgColor: string) {
-		await this.app.init({ background: bgColor, resizeTo: window })
+	async initApp() {
+		await this.app.init({ backgroundAlpha: 0, resizeTo: window, preference: 'webgl' })
 	}
 	addAppToCanvas() {
 		document.body.appendChild(this.app.canvas)
@@ -33,6 +33,24 @@ export class Renderer implements EventObserver {
 	}
 	createContainer() {
 		return new PIXI.Container()
+	}
+	createMesh(position: POSITION, geometry: PIXI.Geometry, shader: PIXI.Shader) {
+		return new PIXI.Mesh({ geometry, shader, position })
+	}
+	createSprite(texture: PIXI.Texture) {
+		return new PIXI.Sprite(texture)
+	}
+	shaderFrom(gl) {
+		const resources = {
+			shaderToyUniforms: {
+				iResolution: { value: [640, 360, 1], type: 'vec3<f32>' }, // FIX:
+				iTime: { value: 0, type: 'f32' },
+			},
+		}
+		return PIXI.Shader.from({ gl, resources })
+	}
+	textureFrom(path: string) {
+		return PIXI.textureFrom(path)
 	}
 	drawRoundSquare(x: number, y: number, s: number, c: number, alpha: number = 1): PIXI.Graphics {
 		return new PIXI.Graphics()
@@ -117,6 +135,9 @@ export class Renderer implements EventObserver {
 	}
 	updateLoop() {
 		this.app.ticker.update()
+	}
+	getMid() {
+		return { x: this.app.screen.width / 2, y: this.app.screen.height / 2 }
 	}
 	update(data: any, event: EVENT): void {
 		if (event == "keyboard") {

@@ -17,9 +17,10 @@ export class GameSound {
 		this.crash.volume = 0.01
 
 		this.collectPoint = PIXI.sound.add("score", "/assets/sound/collect-points.mp3")
+		this.collectPoint.volume = 0.01
 
 		this.gameOver = PIXI.sound.add("game-over", "/assets/sound/game-over-arcade.mp3")
-		this.gameOver.volume = 0.5
+		this.gameOver.volume = 0.01
 		this.levelCompleted = PIXI.sound.add("level-completed", "/assets/sound/level-completed.mp3")
 		this.levelCompleted.volume = 0.1
 		const spirtes = {
@@ -53,11 +54,11 @@ export class GameSound {
 			url: "/assets/sound/piano.wav",
 			sprites: spirtes
 		})
-		this.notes.volume = 0.2
+		this.notes.volume = 0.1
 
 	}
 	startMusic() {
-		// this.homeTheme.autoPlay = true
+		this.homeTheme.autoPlay = true
 		this.homeTheme.play()
 	}
 	mute() {

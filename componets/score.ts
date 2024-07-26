@@ -1,5 +1,6 @@
 import { BLOCK, EVENT, GAMESOUND, RENDERER, TEXT, TEXTSTYLE } from "./types";
 import { EventObserver } from "./eventListener";
+import { MainBlock } from "./tetromino";
 export class Score implements EventObserver {
 	scoreText: TEXT
 	levelText: TEXT
@@ -31,7 +32,7 @@ export class Score implements EventObserver {
 		renderer.stage(this.numLineClearedText)
 		this.renderer = renderer
 	}
-	calculateScore(numLineCleared: number, block: BLOCK, sound: GAMESOUND) {
+	calculateScore(numLineCleared: number, block: MainBlock, sound: GAMESOUND) {
 		let muliplier: number
 		if (numLineCleared == 1) {
 			muliplier = 40
@@ -50,7 +51,7 @@ export class Score implements EventObserver {
 		this.numLineClearedText.text = `line cleared ${this.numLineCleared}`
 		sound.score()
 		if (this.numLineCleared % 10 == 0) {
-			block.normalSpeed += this.level
+			block.normalSpeed += this.level / 2 // TODO: make reasonable speed
 			sound.levelUp()
 			this.levelUP()
 		}
