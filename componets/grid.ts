@@ -1,6 +1,6 @@
 import { Renderer } from "./renderer"
 import { EventObserver } from "./eventListener"
-import { BLOCK, PIXICONTAINER, SIDE, TIME, BINARY, POSITION } from "./types"
+import { BLOCK, GROUP, SIDE, TIME, BINARY, POSITION } from "./types"
 
 
 export class Grid implements EventObserver {
@@ -12,7 +12,7 @@ export class Grid implements EventObserver {
 	size: { w: number, h: number }
 	fracPosition: { x: number, y: number }
 	fracMaxHeight: number
-	container: PIXICONTAINER
+	container: GROUP
 	renderer: Renderer
 	shadowGrid: number[][]
 	clearRowIndex = 0
@@ -25,7 +25,7 @@ export class Grid implements EventObserver {
 		this.numRow = numRow;
 		const margin = numRow / numCol
 		this.fracMaxHeight = maxHeight
-		this.cellSize_ = (maxHeight * window.innerHeight - margin) / numRow
+		this.cellSize_ = 2
 		this.size = { w: numCol * this.cellSize_, h: numRow * this.cellSize_ }
 
 		this.init()
@@ -34,11 +34,13 @@ export class Grid implements EventObserver {
 
 
 		this.fracPosition = { x, y }
-		const xpos = x * window.innerWidth - (this.size.w) / 2
+		let xpos = x * window.innerWidth - (this.size.w) / 2
 		const ypos = y * window.innerHeight
+		xpos = 0
 		this.position = { x: xpos, y: ypos }
 		this.container = renderer.createContainer()
 		this.renderer.stage(this.container)
+		// debugger
 	}
 	get grid() {
 		return this.grid_
@@ -55,9 +57,9 @@ export class Grid implements EventObserver {
 					.drawSquare(
 						colIndex * this.cellSize_ + this.position.x,
 						rowIndex * this.cellSize_ + this.position.y,
-						this.cellSize_,
+						this.cellSize_ / 2,
 						val)
-				this.container.addChild(square)
+				this.container.add(square)
 			}
 		}
 	}
@@ -65,7 +67,7 @@ export class Grid implements EventObserver {
 		return this.cellSize_
 	}
 	redraw() {
-		this.container.removeChildren()
+		this.container.remove()
 		this.show()
 	}
 	addBlock(block: BLOCK) {
@@ -93,8 +95,8 @@ export class Grid implements EventObserver {
 	blockLanded(block: BLOCK, offset: POSITION) {
 		// landed on the grid
 		const gridHeight = this.cellSize_ * this.numRow
-		const groundPos = this.container.getGlobalPosition().y + gridHeight
-		const blockPos = block.container.getGlobalPosition().y + block.container.getSize().height
+		const groundPos = this.container.position.y + gridHeight
+		const blockPos = block.container.position.y + this.renderer.getSize(this.container).y// get the height
 		if (blockPos >= groundPos)
 			return true
 		else { // collision with another tetromino
@@ -136,7 +138,7 @@ export class Grid implements EventObserver {
 			this.grid[row][i] = 0; // set to empty
 			await this.sleep(20)
 			this.redraw();
-			this.renderer.updateLoop()
+			// this.renderer.updateLoop()
 		}
 	}
 	sleep(ms: number) {
@@ -161,7 +163,6 @@ export class Grid implements EventObserver {
 			}
 			this.clearRow(rowIndex)
 			this.redraw()
-			this.renderer.updateLoop()
 			await this.sleep(10);
 		}
 

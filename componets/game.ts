@@ -22,77 +22,87 @@ export class Tetris implements EventObserver {
 	hardPressed = false
 	particle: Particles
 	constructor() {
-		this.eventListener = new EventListener()
+		// this.eventListener = new EventListener()
 		this.renderer = new Renderer()
-		this.gameSound = new GameSound()
+		const rect = this.renderer.drawRect(0, 0, 1, 1, "#000")
+		this.renderer.stage(rect)
+
+		// this.gameSound = new GameSound()
 		this.init()
 	}
-	private async init() {
-		await this.renderer.initApp()  // set background
-		this.renderer.addAppToCanvas() // append app.canvas
+	private init() {
+		this.renderer.initApp()  // set background
+		this.renderer.addAppToCanvas() // append app.canvasn(51)
+		this.renderer.render()
+		this.renderer.createContainer()
+		this.renderer.gameLoop(this.gameLoopTest)
 	}
-	async startGame() {
+	gameLoopTest = () => {
+		if (this)
+			this.renderer.render()
+	}
+	startGame() {
 		this.mainGrid = new Grid({ x: 0.5, y: 0 }, 1, 10, 20, this.renderer)
 		this.previewGrid = new Grid({ x: 0.9, y: 0.5 }, 0.25, 4, 4, this.renderer)
 
 		this.mainGrid.show()
 		this.previewGrid.show()
 
-		this.nextBlock = new PreviewBlock(this.renderer, this.previewGrid)
-		this.currentBlock = new MainBlock(this.renderer)
-		this.ghostBlock = new GhostBlock(this.currentBlock)
-		this.currentBlock.setShadow(this.ghostBlock)
-		this.particle = new Particles()
-		await this.particle.init()
+		// this.nextBlock = new PreviewBlock(this.renderer, this.previewGrid)
+		// this.currentBlock = new MainBlock(this.renderer)
+		// this.ghostBlock = new GhostBlock(this.currentBlock)
+		// this.currentBlock.setShadow(this.ghostBlock)
+		// this.particle = new Particles()
+		// await this.particle.init()
+		//
+		// this.score = new Score({ x: 0.8, y: 0.1 }, this.currentBlock.id, this.renderer)
 
-		this.score = new Score({ x: 0.8, y: 0.1 }, this.currentBlock.id, this.renderer)
-
-		this.setupEventListeners()
-		const startButton = new Button(this.renderer, "text-only", {
-			yfrac: 0.4,
-			xfrac: 0.5,
-			text: "start",
-			size: 150,
-			color: { fg: "fff", bg: "#fff" },
-			onClick: () => {
-				// this.gameSound.startMusic()
-				this.currentBlock.showBlock(this.mainGrid)
-				this.ghostBlock.shadow()
-
-				this.renderer.gameLoop(this.gameLoop, this)
-				this.mainGrid.clear()
-			}
-		}, true)
-		const muteButton = new Button(this.renderer, "text-only", {
-			yfrac: 0.2,
-			xfrac: 0.1,
-			text: "mute",
-			size: 50,
-			color: { fg: "#fff", bg: "#f00" },
-			onClick: () => {
-				this.muted = !this.muted
-				if (this.muted)
-					this.gameSound.mute()
-				else
-					this.gameSound.unMute()
-				return this.muted
-			}
-
-		}, false)
-		this.listenEvents([
-			{ obj: this.mainGrid, event: "resize" },
-			{ obj: this.previewGrid, event: "resize" },
-			{ obj: this.currentBlock, event: "resize" },
-			{ obj: this.currentBlock, event: "keyboard" },
-			{ obj: this.nextBlock, event: "resize" },
-			{ obj: this.ghostBlock, event: "resize" },
-			{ obj: this.score, event: "resize" },
-			{ obj: startButton, event: "resize" },
-			{ obj: muteButton, event: "resize" },
-			{ obj: this.renderer, event: "keyboard" }, // to pause and play
-			{ obj: this, event: "keyboard" }, // to check hardpress
-		])
-		this.mainGrid.colorAll(8)// color grid black
+		// this.setupEventListeners()
+		// const startButton = new Button(this.renderer, "text-only", {
+		// 	yfrac: 0.4,
+		// 	xfrac: 0.5,
+		// 	text: "start",
+		// 	size: 150,
+		// 	color: { fg: "fff", bg: "#fff" },
+		// 	onClick: () => {
+		// 		// this.gameSound.startMusic()
+		// 		this.currentBlock.showBlock(this.mainGrid)
+		// 		this.ghostBlock.shadow()
+		//
+		// 		this.renderer.gameLoop(this.gameLoop)
+		// 		this.mainGrid.clear()
+		// 	}
+		// }, true)
+		// const muteButton = new Button(this.renderer, "text-only", {
+		// 	yfrac: 0.2,
+		// 	xfrac: 0.1,
+		// 	text: "mute",
+		// 	size: 50,
+		// 	color: { fg: "#fff", bg: "#f00" },
+		// 	onClick: () => {
+		// 		this.muted = !this.muted
+		// 		if (this.muted)
+		// 			this.gameSound.mute()
+		// 		else
+		// 			this.gameSound.unMute()
+		// 		return this.muted
+		// 	}
+		//
+		// }, false)
+		// this.listenEvents([
+		// 	{ obj: this.mainGrid, event: "resize" },
+		// 	{ obj: this.previewGrid, event: "resize" },
+		// 	{ obj: this.currentBlock, event: "resize" },
+		// 	{ obj: this.currentBlock, event: "keyboard" },
+		// 	{ obj: this.nextBlock, event: "resize" },
+		// 	{ obj: this.ghostBlock, event: "resize" },
+		// 	// { obj: this.score, event: "resize" },
+		// 	// { obj: startButton, event: "resize" },
+		// 	// { obj: muteButton, event: "resize" },
+		// 	{ obj: this.renderer, event: "keyboard" }, // to pause and play
+		// 	{ obj: this, event: "keyboard" }, // to check hardpress
+		// ])
+		// this.mainGrid.colorAll(1)// color grid black
 	}
 	gameLoop() {
 		if (this.mainGrid.reachTop()) { // game over
@@ -176,7 +186,7 @@ export class Tetris implements EventObserver {
 
 		}
 		if (completed != 0) {
-			this.score.calculateScore(completed, this.currentBlock, this.gameSound)
+			this.score.calculateScore(completed, this.currentBlock, this.gameSound, this.particle)
 			this.gameSound.score()// make sound
 		}
 		return completed

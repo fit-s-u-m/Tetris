@@ -10,13 +10,14 @@ export class Particles {
 	geometry: any;
 	winParticles: any = [];
 	homeParticles: any = [];
+	levelUpParticles: any = [];
 	urls: { win: string, lose: string, levelUp: string, home: string }
 
 	constructor() {
 		this.urls = {
-			win: "../public/assets/particles/win.json",
+			win: "../public/assets/particles/test.json",
 			lose: "../public/assets/particles/lose.json",
-			levelUp: "../public/assets/particles/levelUp.json",
+			levelUp: "../public/assets/particles/fireWork.json",
 			home: "../public/assets/particles/home.json"
 		}
 	}
@@ -37,6 +38,18 @@ export class Particles {
 		this.winParticles.push(tsParticles.domItem(0))
 		await this.sleep(1000)
 		for (const particle of this.winParticles) { // stop
+			particle.stop()
+		}
+		this.init()
+	}
+	async drawLevelUp() {
+		await tsParticles.load({
+			id: "tsparticles",
+			url: this.urls.levelUp,
+		})
+		this.levelUpParticles.push(tsParticles.domItem(0))
+		await this.sleep(2000)
+		for (const particle of this.levelUpParticles) { // stop
 			particle.stop()
 		}
 		this.init()

@@ -32,7 +32,7 @@ export class Score implements EventObserver {
 		renderer.stage(this.numLineClearedText)
 		this.renderer = renderer
 	}
-	calculateScore(numLineCleared: number, block: MainBlock, sound: GAMESOUND) {
+	calculateScore(numLineCleared: number, block: MainBlock, sound: GAMESOUND, particles: any) {
 		let muliplier: number
 		if (numLineCleared == 1) {
 			muliplier = 40
@@ -54,6 +54,7 @@ export class Score implements EventObserver {
 			block.normalSpeed += this.level / 2 // TODO: make reasonable speed
 			sound.levelUp()
 			this.levelUP()
+			particles.drawLevelUp()
 		}
 	}
 	subPoint(x: number) {

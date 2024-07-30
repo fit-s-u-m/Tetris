@@ -1,13 +1,20 @@
-import * as  PIXI from "pixi.js"
-import { Block } from "./block"
+// import * as  PIXI from "pixi.js"
 import { EventObserver } from "./eventListener"
 import { EVENT, POSITION } from "./types"
+import * as THREE from "three"
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
+import { FontLoader } from 'three/examples/jsm/loaders/FontLoader';
+import GUI from "lil-gui";
 
 
 export class Renderer implements EventObserver {
-	app: PIXI.Application
+	scene: THREE.Scene
+	camera: THREE.Camera
+	renderer: THREE.WebGLRenderer
+	fontloader: FontLoader
 	readonly color: string[]
 	private isPaused = false
+	gui: GUI
 	constructor() {
 		this.color = [
 			"#222222",
@@ -20,136 +27,139 @@ export class Renderer implements EventObserver {
 			"#00A200",
 			"#000000"
 		]
-		this.app = new PIXI.Application()
+		this.scene = new THREE.Scene()
+		this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000)
+		this.camera.position.z = 100
+		this.gui = new GUI()
+		this.gui.add(this.camera.position, "z", 10, 1000)
 	}
-	async initApp() {
-		await this.app.init({ backgroundAlpha: 0, resizeTo: window, preference: 'webgl' })
+	initApp() {
+		this.renderer = new THREE.WebGLRenderer()
+		this.renderer.setSize(window.innerWidth, window.innerHeight)
+		this.fontloader = new FontLoader()
+	}
+	render() {
+		this.renderer.render(this.scene, this.camera)
 	}
 	addAppToCanvas() {
-		document.body.appendChild(this.app.canvas)
+		document.body.appendChild(this.renderer.domElement)
 	}
-	stage(drawing: PIXI.Graphics | PIXI.Container | PIXI.Sprite): void {
-		this.app.stage.addChild(drawing)
+	stage(mesh: THREE.Mesh | THREE.Group): void {
+		this.scene.add(mesh)
 	}
 	createContainer() {
-		return new PIXI.Container()
+		return new THREE.Group()
 	}
-	createMesh(position: POSITION, geometry: PIXI.Geometry, shader: PIXI.Shader) {
-		return new PIXI.Mesh({ geometry, shader, position })
+	getSize(group: THREE.Group) {
+		const box = new THREE.Box3().setFromObject(group)
+		const size = new THREE.Vector3()
+		box.getSize(size)
+		return size
 	}
-	createSprite(texture: PIXI.Texture) {
-		return new PIXI.Sprite(texture)
+	drawRoundSquare(x: number, y: number, s: number, c: number, alpha: number = 1): THREE.Mesh {
+		const geometry = new THREE.BoxGeometry(s, s, s)
+		const material = new THREE.MeshBasicMaterial({ color: this.color[c], transparent: true, opacity: alpha })
+		const square = new THREE.Mesh(geometry, material)
+		square.position.set(x, y, 0)
+		return square
 	}
-	shaderFrom(gl) {
-		const resources = {
-			shaderToyUniforms: {
-				iResolution: { value: [640, 360, 1], type: 'vec3<f32>' }, // FIX:
-				iTime: { value: 0, type: 'f32' },
+	drawRoundRect(x: number, y: number, sx: number, sy: number, c: string): THREE.Mesh {
+		const geometry = new THREE.BoxGeometry(sx, sy, 0)
+		const material = new THREE.MeshBasicMaterial({ color: c })
+		const rect = new THREE.Mesh(geometry, material)
+		rect.position.set(x, y, 0)
+		return rect
+	}
+	drawRect(x: number, y: number, sx: number, sy: number, c: string): THREE.Mesh {
+		const geometry = new THREE.BoxGeometry(sx, sy, 0)
+		const material = new THREE.MeshBasicMaterial({ color: c })
+		const rect = new THREE.Mesh(geometry, material)
+		rect.position.set(x, y, 0)
+		return rect
+	}
+	drawSquare(x: number, y: number, s: number, c: number, alpha: number = 1): THREE.Mesh {
+		const geometry = new THREE.BoxGeometry(s, s, s)
+		const material = new THREE.MeshBasicMaterial({ color: "red", transparent: true, opacity: alpha })
+		const square = new THREE.Mesh(geometry, material)
+		square.position.set(x, y, 0)
+		return square
+	}
+	makeTextStyle() {
+		const font = this.fontloader.load(
+			// resource URL
+			'fonts/helvetiker_bold.typeface.json',
+
+			// onLoad callback
+			function(font) {
+				// do something with the font
+				console.log(font);
 			},
-		}
-		return PIXI.Shader.from({ gl, resources })
-	}
-	textureFrom(path: string) {
-		return PIXI.textureFrom(path)
-	}
-	drawRoundSquare(x: number, y: number, s: number, c: number, alpha: number = 1): PIXI.Graphics {
-		return new PIXI.Graphics()
-			.roundRect(x, y, s, s, 5)
-			.fill({ color: this.color[c], alpha })
-			.stroke({ color: "#000", width: 1.1 })
-	}
-	drawRoundRect(x: number, y: number, sx: number, sy: number, c: string): PIXI.Graphics {
-		return new PIXI.Graphics()
-			.roundRect(x, y, sx, sy, 10)
-			.fill(c)
-			.stroke("#000")
-	}
-	drawRect(x: number, y: number, sx: number, sy: number, c: string): PIXI.Graphics {
-		return new PIXI.Graphics()
-			.rect(x, y, sx, sy)
-			.fill(c)
-			.stroke("#000")
-	}
-	drawSquare(x: number, y: number, s: number, c: number, alpha: number = 1): PIXI.Graphics {
-		return new PIXI.Graphics()
-			.rect(x, y, s, s)
-			.fill({ color: this.color[c], alpha })
-			.stroke("#000")
-	}
-	makeTextStyle(fontSize: number, color: string): PIXI.TextStyle {
-		const style = new PIXI.TextStyle({
-			fontFamily: 'Arial',
-			fontSize: fontSize,
-			fontWeight: 'bold',
-			fill: color,
-			stroke: { color: '#000', width: fontSize / 20, join: 'round' },
-			dropShadow: {
-				color: '#000',
-				blur: 3,
-				angle: Math.PI / 6,
-				distance: 3,
+
+			// onProgress callback
+			function(xhr) {
+				console.log((xhr.loaded / xhr.total * 100) + '% loaded');
 			},
-			wordWrap: true,
-			wordWrapWidth: 440,
-		});
-		return style
 
-	}
-	drawText(text: string, x: number, y: number, style: PIXI.TextStyle): PIXI.Text {
-		const textDrawing = new PIXI.Text({ text, style })
-		textDrawing.x = x
-		textDrawing.y = y
-		return textDrawing
-
-	}
-
-	drawCircle(x: number, y: number, r: number, c: number) {
-		return new PIXI.Graphics()
-			.circle(x, y, r)
-			.fill(this.color[c])
-	}
-
-	gameLoop(callback: PIXI.TickerCallback<any>, context: any) {
-		this.app.ticker.autoStart = false;
-		this.app.ticker.add(callback, context)
-	}
-	delayGame(time: number) {
-		this.app.ticker.stop()
-		// block.speed = 0
-
-		setTimeout(
-			() => {
-				this.app.ticker.start()
-				// block.speed = 0
+			// onError callback
+			function(err) {
+				console.log('An error happened');
 			}
-			, time)
+		);
 	}
-	stopLoop(callback: PIXI.TickerCallback<any>, context: any) {
-		this.app.ticker.remove(callback, context)
+	// drawText(text: string, x: number, y: number, style: PIXI.TextStyle): PIXI.Text {
+	// 	const textDrawing = new PIXI.Text({ text, style })
+	// 	textDrawing.x = x
+	// 	textDrawing.y = y
+	// 	return textDrawing
+	//
+	// }
+	//
+	// drawCircle(x: number, y: number, r: number, c: number) {
+	// 	return new PIXI.Graphics()
+	// 		.circle(x, y, r)
+	// 		.fill(this.color[c])
+	// }
+	//
+	gameLoop(callback: () => void) {
+		this.renderer.setAnimationLoop(callback)
 	}
-	pauseLoop() {
-		this.app.ticker.stop()
+	// delayGame(time: number) {
+	// 	this.scene.ticker.stop()
+	// 	// block.speed = 0
+	//
+	// 	setTimeout(
+	// 		() => {
+	// 			this.scene.ticker.start()
+	// 			// block.speed = 0
+	// 		}
+	// 		, time)
+	// }
+	stopLoop() {
+		this.renderer.setAnimationLoop(null);
 	}
-	startLoop() {
-		this.app.ticker.start()
-	}
-	updateLoop() {
-		this.app.ticker.update()
-	}
+	// pauseLoop() {
+	// 	this.scene.ticker.stop()
+	// }
+	// startLoop() {
+	// 	this.scene.ticker.start()
+	// }
+	// updateLoop() {
+	// 	this.scene.ticker.update()
+	// }
 	getMid() {
-		return { x: this.app.screen.width / 2, y: this.app.screen.height / 2 }
+		return { x: window.innerWidth / 2, y: window.innerHeight / 2 }
 	}
 	update(data: any, event: EVENT): void {
 		if (event == "keyboard") {
 			switch (data) {
 				case "p":
 					if (this.isPaused) {
-						this.startLoop()
+						// this.startLoop()
 						// this.sound.homeTheme.play()
 					}
 					else {
 						// this.sound.homeTheme.stop()
-						this.pauseLoop()
+						// this.pauseLoop()
 					}
 					this.isPaused = !this.isPaused
 					break

@@ -1,11 +1,11 @@
 import { EventObserver } from "./eventListener"
-import { GRID, PIXICONTAINER, RENDERER, EVENT, SCORE, GAMESOUND } from "./types"
+import { GRID, RENDERER, EVENT, GROUP } from "./types"
 
 export abstract class Block implements EventObserver {
 	id: number
 	orientation: { x: number, y: number }[][] = []
 	currentOrientation: { x: number, y: number }[] = []
-	container: PIXICONTAINER
+	container: GROUP
 	renderer: RENDERER
 	grid: GRID
 	protected alpha = 1
@@ -15,7 +15,7 @@ export abstract class Block implements EventObserver {
 		this.grid = grid
 		this.currentOrientation
 			.forEach(pos => {
-				this.container.addChild(
+				this.container.add(
 					this.renderer.
 						drawRoundSquare(
 							this.grid.position.x + (pos.x * this.grid.cellSize),
@@ -27,13 +27,13 @@ export abstract class Block implements EventObserver {
 			})
 	}
 	redraw() {
-		this.container.removeChildren()
+		this.container.remove()
 		this.showBlock(this.grid)
 	}
 	// Calculate the block's coordinates on the grid
 	coordinate(): { x: number, y: number }[] {
 		let blockCoord: { x: number, y: number }
-		const blockPos = this.container.getGlobalPosition()
+		const blockPos = this.container.position
 		blockCoord = {
 			x: blockPos.x / this.grid.cellSize,
 			y: blockPos.y / this.grid.cellSize
@@ -56,13 +56,12 @@ export abstract class Block implements EventObserver {
 	}
 
 	destruct() {
-		this.container.destroy()
 	}
 
 	update(data: any, event: EVENT) { // resize
 		if (event == "resize") {
 			if (this.container.position)
-				this.container.position.set(0, 0)
+				this.container.position.set(0, 0, 0)
 			if (this.grid)
 				this.redraw()
 		}
