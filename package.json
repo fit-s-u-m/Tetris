@@ -14,8 +14,6 @@
   },
   "type": "module",
   "dependencies": {
-    "@pixi/particle-container": "^7.4.2",
-    "@pixi/particle-emitter": "^5.0.8",
     "@pixi/sound": "^6.0.0",
     "@tsparticles/all": "^3.5.0",
     "@types/three": "^0.167.1",
