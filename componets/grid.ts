@@ -1,6 +1,6 @@
 import { Renderer } from "./renderer"
 import { EventObserver } from "./eventListener"
-import { BLOCK, PIXICONTAINER, SIDE, TIME, BINARY, POSITION } from "./types"
+import { BLOCK, GROUP, SIDE, TIME, BINARY, POSITION } from "./types"
 
 
 export class Grid implements EventObserver {
@@ -12,7 +12,7 @@ export class Grid implements EventObserver {
 	size: { w: number, h: number }
 	fracPosition: { x: number, y: number }
 	fracMaxHeight: number
-	container: PIXICONTAINER
+	container: GROUP
 	renderer: Renderer
 	shadowGrid: number[][]
 	clearRowIndex = 0
@@ -57,7 +57,7 @@ export class Grid implements EventObserver {
 						rowIndex * this.cellSize_ + this.position.y,
 						this.cellSize_,
 						val)
-				this.container.addChild(square)
+				this.container.add(square)
 			}
 		}
 	}

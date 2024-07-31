@@ -13,6 +13,7 @@
   },
   "type": "module",
   "dependencies": {
-    "@tsparticles/all": "^3.5.0"
+    "@tsparticles/all": "^3.5.0",
+    "konva": "^9.3.14"
   }
 }
