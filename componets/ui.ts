@@ -1,10 +1,11 @@
 import { EventObserver } from "./eventListener"
 import { Renderer } from "./renderer"
-import { BUTTONTYPE, PIXICONTAINER, TEXT } from "./types"
+import { BUTTONTYPE } from "./types"
+import Konva from "konva"
 
 export class Button implements EventObserver {
 	renderer: Renderer
-	button: PIXICONTAINER
+	button: Konva.Label
 	fracPos: { x: number, y: number }
 	size: number
 	buttonType: BUTTONTYPE
@@ -34,69 +35,69 @@ export class Button implements EventObserver {
 			this.createTextButton(options, shouldDestroy)
 	}
 	createButton({ yfrac, xfrac, text, size, color, onClick }, shouldDestroy: boolean = false) {
-		const x = (window.innerWidth) * xfrac
-		const y = (window.innerHeight) * yfrac
-
-		const buttonContainer = this.renderer.createContainer()
-		const fontsize = size / 4
-		const width = fontsize * text.length / 1.1
-
-		const xcenter = x - width / 2
-		const ycenter = y
-
-		const buttonBg = this.renderer.drawRoundRect(xcenter, ycenter, width, size / 2, color.bg)
-		buttonBg.tint = "#000"
-
-		const textStyle = this.renderer.makeTextStyle(fontsize, color.fg)
-		const buttonText = this.renderer.drawText(text, x - width / 3, y + width / 16, textStyle)
-
-		buttonContainer.addChild(buttonBg, buttonText)
-		buttonContainer.interactive = true; // Enable interaction
-
-		buttonContainer.on('pointerdown', () => {
-			const pressed = onClick()
-			if (pressed) {
-				buttonBg.tint = "#f00"
-			} else {
-				buttonBg.tint = "#000"
-			}
-			if (shouldDestroy)
-				buttonContainer.destroy()
+		const fontSize = size / 4
+		var simpleLabel = new Konva.Label({
+			x: xfrac * window.innerWidth,
+			y: yfrac * window.innerHeight,
 		});
-		this.button = buttonContainer
-		this.renderer.stage(buttonContainer)
+
+		simpleLabel.add(
+			new Konva.Text({
+				text,
+				fontFamily: 'Calibri',
+				fontSize,
+				padding: 5,
+				fill: color.fg,
+			})
+		);
+		this.button = simpleLabel
+		simpleLabel.on('click', () => {
+			onClick()
+			if (shouldDestroy)
+				this.button.destroy
+		})
+
 	}
 	createTextButton({ yfrac, xfrac, text, size, color, onClick }, shouldDestroy = false) {
 
 		const x = (window.innerWidth) * xfrac
 		const y = (window.innerHeight) * yfrac
 
-		const buttonContainer = this.renderer.createContainer()
-		const fontsize = size / 4
-		const width = fontsize * text.length / 1.1
+		const fontSize = size / 4
+		var simpleLabel = new Konva.Label({ x, y });
 
-		const textStyle = this.renderer.makeTextStyle(fontsize, color.fg)
-		const buttonText = this.renderer.drawText(text, x - width / 4, y, textStyle)
+		simpleLabel.add(
+			new Konva.Tag({
+				fill: color.bg,
+				lineCap: "butt",
+			})
+		);
 
-		buttonContainer.addChild(buttonText)
-		buttonContainer.interactive = true; // Enable interaction
-		buttonContainer.cursor = 'pointer'
-		buttonContainer.eventMode = 'static';
-
-		buttonContainer.on('pointerdown', () => {
+		simpleLabel.add(
+			new Konva.Text({
+				text,
+				fontFamily: 'Calibri',
+				fontSize,
+				padding: 5,
+				fill: color.fg,
+			})
+		);
+		const position = simpleLabel.getPosition()
+		position.x -= simpleLabel.getSize().width / 2
+		simpleLabel.setPosition(position)
+		simpleLabel.on('click', () => {
 			const pressed = onClick()
 			if (pressed) {
-				const newtextStyle = this.renderer.makeTextStyle(fontsize, color.bg)
-				buttonText.style = newtextStyle
+				simpleLabel.getTag().fill("red")
 			} else {
-				const newtextStyle = this.renderer.makeTextStyle(fontsize, color.fg)
-				buttonText.style = newtextStyle
+				simpleLabel.getTag().fill("#aaa")
 			}
 			if (shouldDestroy)
-				buttonContainer.destroy()
-		});
-		this.renderer.stage(buttonContainer)
-		this.button = buttonContainer
+				simpleLabel.destroy()
+		})
+
+		this.button = simpleLabel
+		this.renderer.stage(this.button)
 	}
 	update(data: any, _event: string): void {
 		if (this.buttonType == "text-only") {
@@ -104,14 +105,14 @@ export class Button implements EventObserver {
 			const text = textContainer[0]
 			if (text) {
 				const fontSize = this.size / 4
-				const textStyle = this.renderer.makeTextStyle(fontSize, this.color.fg)
-				text.style = textStyle
+				this.button.getText()
+					.fontSize(fontSize)
+					.fill(this.color.fg)
+				this.button.getTag().fill(this.color.bg)
 				const width = fontSize * this.text.length / 1.1
 				const x = (data.w) * this.fracPos.x
 				const y = (data.h) * this.fracPos.y
-				text.x = x - width / 4
-				text.y = y
-
+				this.button.getText().setPosition({ x: x - width / 4, y })
 			}
 		}
 		else {

@@ -25,18 +25,24 @@ export class MainBlock extends Block {
 	// movement
 	moveDown(speed: number = this.normalSpeed) {
 		this.speed = speed
-		this.container.y += this.speed
+		const position = this.container.getPosition()
+		position.y += this.speed
+		this.container.setPosition(position)
 		this.speed = this.normalSpeed
 	}
 	moveLeft() {
 		if (!this.grid.overSide(this, { x: -1, y: 0 }) && !this.grid.blockLanded(this, { x: -1, y: 0 })) {
-			this.container.x -= this.grid.cellSize // move
+			const position = this.container.getPosition()
+			position.x -= this.grid.cellSize
+			this.container.setPosition(position)
 			this.ghost.shadow()
 		}
 	}
 	moveRight() {
 		if (!this.grid.overSide(this, { x: 1, y: 0 }) && !this.grid.blockLanded(this, { x: 1, y: 0 })) {
-			this.container.x += this.grid.cellSize
+			const position = this.container.getPosition()
+			position.x += this.grid.cellSize
+			this.container.setPosition(position)
 			this.ghost.shadow()
 		}
 	}
@@ -52,8 +58,10 @@ export class MainBlock extends Block {
 			const kicks = tetrominoShapes[this.tetromino].wallKicks[kickKey]
 			for (const kick of kicks) {
 				if (this.grid.isValidPosition(this, { x: kick[0], y: kick[1] })) {
-					this.container.x += kick[0] * this.grid.cellSize
-					this.container.y += kick[1] * this.grid.cellSize
+					const position = this.container.getPosition()
+					position.x += kick[0] * this.grid.cellSize
+					position.y += kick[1] * this.grid.cellSize
+					this.container.position(position)
 					return
 				}
 			}
@@ -71,8 +79,10 @@ export class MainBlock extends Block {
 			const kicks = tetrominoShapes[this.tetromino].wallKicks[kickKey]
 			for (const kick of kicks) {
 				if (this.grid.isValidPosition(this, { x: kick[0], y: kick[1] })) {
-					this.container.x += kick[0] * this.grid.cellSize
-					this.container.y += kick[1] * this.grid.cellSize
+					const position = this.container.getPosition()
+					position.x += kick[0] * this.grid.cellSize
+					position.y += kick[1] * this.grid.cellSize
+					this.container.position(position)
 					return
 				}
 			}
@@ -83,8 +93,8 @@ export class MainBlock extends Block {
 	}
 	update(data: any, event: EVENT): void {
 		if (event == "resize") {
-			if (this.container.position)
-				this.container.position.set(0, 0)
+			if (this.container.getPosition())
+				this.container.setPosition({ x: 0, y: 0 })
 			if (this.grid)
 				this.redraw()
 		}
@@ -122,12 +132,11 @@ export class MainBlock extends Block {
 
 	}
 	createNew(block: PreviewBlock) {
-		this.id = block.id // for color TODO: change this please
+		this.id = block.id
 		this.orientation = block.orientation
 		this.rotationState = 0
 		this.currentOrientation = this.orientation[this.rotationState]
-		this.container.y = 0
-		this.container.x = 0
+		this.container.setPosition({ x: 0, y: 0 })
 		this.redraw()
 	}
 }
@@ -169,7 +178,7 @@ export class GhostBlock extends Block {
 		this.id = this.block.id
 
 		// Calculate the block's coordinates on the grid
-		const blockPos = this.block.container.getGlobalPosition()
+		const blockPos = this.block.container.position()
 		const rows = new Set()
 		const nextRotation = this.block.rotationState === 3 ? 0 : this.block.rotationState + 1
 		const nextOrientation = this.orientation[nextRotation]
@@ -182,11 +191,15 @@ export class GhostBlock extends Block {
 			x: Math.round(blockPos.x / this.grid.cellSize),
 			y: Math.round((blockPos.y) / this.grid.cellSize) + numOfRow
 		}
-
-		this.container.y = blockCoord.y * this.grid.cellSize
-		this.container.x = blockCoord.x * this.grid.cellSize
+		const position = {
+			x: blockCoord.x * this.grid.cellSize,
+			y: blockCoord.y * this.grid.cellSize
+		}
+		this.container.setPosition(position)
 		while (this.grid.isValidPosition(this, { x: 0, y: 1 })) {
-			this.container.y += this.grid.cellSize
+			const position = this.container.getPosition()
+			position.y += this.grid.cellSize
+			this.container.setPosition(position)
 		}
 		this.redraw()
 	}

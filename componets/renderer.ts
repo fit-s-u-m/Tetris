@@ -1,6 +1,6 @@
 import { Block } from "./block"
 import { EventObserver } from "./eventListener"
-import { DRAWING, EVENT, POSITION } from "./types"
+import { CALLBACK, DRAWING, EVENT, POSITION } from "./types"
 import * as  PIXI from "pixi.js"
 import Konva from "konva"
 
@@ -119,36 +119,35 @@ export class Renderer implements EventObserver {
 			.fill(this.color[c])
 	}
 
-	gameLoop(callback: PIXI.TickerCallback<any>, context: any) {
-		this.app.ticker.autoStart = false;
-		this.app.ticker.add(callback, context)
+	gameLoop(callback: CALLBACK, context: any) {
+		window.requestAnimationFrame(callback)
 	}
-	delayGame(time: number) {
-		this.app.ticker.stop()
-		// block.speed = 0
-
-		setTimeout(
-			() => {
-				this.app.ticker.start()
-				// block.speed = 0
-			}
-			, time)
-	}
-	stopLoop(callback: PIXI.TickerCallback<any>, context: any) {
-		this.app.ticker.remove(callback, context)
-	}
-	pauseLoop() {
-		this.app.ticker.stop()
-	}
-	startLoop() {
-		this.app.ticker.start()
-	}
-	updateLoop() {
-		this.app.ticker.update()
-	}
-	getMid() {
-		return { x: this.app.screen.width / 2, y: this.app.screen.height / 2 }
-	}
+	// delayGame(time: number) {
+	// 	this.app.ticker.stop()
+	// 	// block.speed = 0
+	//
+	// 	setTimeout(
+	// 		() => {
+	// 			this.app.ticker.start()
+	// 			// block.speed = 0
+	// 		}
+	// 		, time)
+	// }
+	// stopLoop(callback: PIXI.TickerCallback<any>, context: any) {
+	// 	this.app.ticker.remove(callback, context)
+	// }
+	// pauseLoop() {
+	// 	this.app.ticker.stop()
+	// }
+	// startLoop() {
+	// 	this.app.ticker.start()
+	// }
+	// updateLoop() {
+	// 	this.app.ticker.update()
+	// }
+	// getMid() {
+	// 	return { x: this.app.screen.width / 2, y: this.app.screen.height / 2 }
+	// }
 	update(data: any, event: EVENT): void {
 		if (event == "keyboard") {
 			switch (data) {

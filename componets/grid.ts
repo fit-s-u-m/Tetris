@@ -93,11 +93,11 @@ export class Grid implements EventObserver {
 	blockLanded(block: BLOCK, offset: POSITION) {
 		// landed on the grid
 		const gridHeight = this.cellSize_ * this.numRow
-		const groundPos = this.container.getGlobalPosition().y + gridHeight
-		const blockPos = block.container.getGlobalPosition().y + block.container.getSize().height
+		const groundPos = this.container.getPosition().y + gridHeight
+		const blockPos = block.container.getPosition() + block.container.getSize().height
 		if (blockPos >= groundPos)
 			return true
-		else { // collision with another tetromino
+		else { // collision with another tetromino.
 			const blockCoord = block.coordinate()
 			return this.checkBlockIsOnAnother(blockCoord, offset)
 		}
@@ -134,9 +134,9 @@ export class Grid implements EventObserver {
 	async clearEntireRow(row: number) {
 		for (let i = 0; i < this.numCol; i++) {
 			this.grid[row][i] = 0; // set to empty
-			await this.sleep(20)
+			// await this.sleep(20)
 			this.redraw();
-			this.renderer.updateLoop()
+			// this.renderer.updateLoop()
 		}
 	}
 	sleep(ms: number) {
