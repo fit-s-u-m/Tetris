@@ -17,7 +17,7 @@ export class Grid implements EventObserver {
 	shadowGrid: number[][]
 	clearRowIndex = 0
 	moveDownIndex = 0
-	protected spiralIteration = 0
+	// protected spiralIteration = 0
 	protected spiralIndices: { i: number, j: number }[]
 
 	constructor({ x, y }: { x: number, y: number }, maxHeight: number, numCol: number, numRow: number, renderer: Renderer) {
@@ -94,7 +94,7 @@ export class Grid implements EventObserver {
 		// landed on the grid
 		const gridHeight = this.cellSize_ * this.numRow
 		const groundPos = this.container.getPosition().y + gridHeight
-		const blockPos = block.container.getPosition() + block.container.getSize().height
+		const blockPos = block.container.getPosition().y + block.container.getSize().height
 		if (blockPos >= groundPos)
 			return true
 		else { // collision with another tetromino.
@@ -134,7 +134,7 @@ export class Grid implements EventObserver {
 	async clearEntireRow(row: number) {
 		for (let i = 0; i < this.numCol; i++) {
 			this.grid[row][i] = 0; // set to empty
-			// await this.sleep(20)
+			await this.sleep(30)
 			this.redraw();
 			// this.renderer.updateLoop()
 		}
@@ -161,8 +161,8 @@ export class Grid implements EventObserver {
 			}
 			this.clearRow(rowIndex)
 			this.redraw()
-			this.renderer.updateLoop()
-			await this.sleep(10);
+			// this.renderer.updateLoop()
+			await this.sleep(20);
 		}
 
 	}
@@ -207,19 +207,23 @@ export class Grid implements EventObserver {
 
 		return result;
 	}
-	drawSpiral(calback: { whenFinshed: () => void; }) {
-		if (this.spiralIteration < this.numRow * this.numCol) {
-			const spiral = this.spiralIndices[this.spiralIteration]
+	async drawSpiral() {
+		let spiralIteration = 0
+
+		while (spiralIteration < this.numRow * this.numCol) {
+			const spiral = this.spiralIndices[spiralIteration]
 			const color = 8
 			this.grid[spiral.i][spiral.j] = color
 			this.redraw()
-			this.spiralIteration += 1
+			spiralIteration += 1
+			await this.sleep(10)
+
 		}
-		else {
-			this.spiralIteration = 0
-			calback.whenFinshed()
-			return
-		}
+		// else {
+		// 	this.spiralIteration = 0
+		// 	calback.whenFinshed()
+		// 	return
+		// }
 	}
 	clear() {
 		for (let i = 0; i < this.numRow; i++) {

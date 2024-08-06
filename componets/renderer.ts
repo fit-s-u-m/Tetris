@@ -10,6 +10,7 @@ export class Renderer implements EventObserver {
 	layer: Konva.Layer
 	readonly color: string[]
 	private isPaused = false
+	private animation: Konva.Animation
 	constructor() {
 		this.color = [
 			"#222222",
@@ -32,7 +33,7 @@ export class Renderer implements EventObserver {
 		this.layer = new Konva.Layer()
 		this.app.add(this.layer)
 	}
-	stage(drawing: DRAWING): void {
+	stage(drawing: any): void {
 		this.layer.add(drawing)
 	}
 	createContainer() {
@@ -49,6 +50,19 @@ export class Renderer implements EventObserver {
 			lineCap: "round",
 			strokeWidth: 1,
 		})
+	}
+	drawText(text: string, x: number, y: number, fontSize: number, color: string) {
+		// var simpleLabel = new Konva.Label({ x, y });
+		const simple_text = new Konva.Text({
+			x, y,
+			text,
+			fontFamily: 'Calibri',
+			fontStyle: "bold",
+			fontSize,
+			padding: 10,
+			fill: color,
+		})
+		return simple_text
 	}
 	drawRoundRect(x: number, y: number, sx: number, sy: number, c: string): Konva.Rect {
 		return new Konva.Rect({
@@ -105,22 +119,34 @@ export class Renderer implements EventObserver {
 		return style
 
 	}
-	drawText(text: string, x: number, y: number, style: PIXI.TextStyle): PIXI.Text {
-		const textDrawing = new PIXI.Text({ text, style })
-		textDrawing.x = x
-		textDrawing.y = y
-		return textDrawing
-
-	}
-
 	drawCircle(x: number, y: number, r: number, c: number) {
 		return new PIXI.Graphics()
 			.circle(x, y, r)
 			.fill(this.color[c])
 	}
+	drawImage({ id, width, x, y, height, container }: { id: number, width: number, x: number, y: number, height: number, container: Konva.Group }) {
+		const tetrominos = ['I', 'T', 'J', 'L', 'S', 'Z', 'O']
+		const path = `../public/assets/${tetrominos[id - 1]}.png`
 
-	gameLoop(callback: CALLBACK, context: any) {
-		window.requestAnimationFrame(callback)
+
+		const imageObj = new Image();
+		imageObj.onload = () => {
+			const image = new Konva.Image({
+				x,
+				y,
+				image: imageObj,
+				width,
+				height
+			});
+			container.add(image)
+
+		};
+		imageObj.src = path
+	}
+
+	gameLoop(callback: any, context?: any) {
+		this.animation = new Konva.Animation(callback.bind(context), this.layer)
+		this.animation.start()
 	}
 	// delayGame(time: number) {
 	// 	this.app.ticker.stop()
@@ -136,12 +162,12 @@ export class Renderer implements EventObserver {
 	// stopLoop(callback: PIXI.TickerCallback<any>, context: any) {
 	// 	this.app.ticker.remove(callback, context)
 	// }
-	// pauseLoop() {
-	// 	this.app.ticker.stop()
-	// }
-	// startLoop() {
-	// 	this.app.ticker.start()
-	// }
+	pauseLoop() {
+		this.animation.stop()
+	}
+	startLoop() {
+		this.animation.start()
+	}
 	// updateLoop() {
 	// 	this.app.ticker.update()
 	// }

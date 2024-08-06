@@ -31,7 +31,7 @@ export class Tetris implements EventObserver {
 	}
 	startGame() {
 		this.mainGrid = new Grid({ x: 0.5, y: 0 }, 1, 10, 20, this.renderer)
-		this.previewGrid = new Grid({ x: 0.9, y: 0.5 }, 0.25, 4, 4, this.renderer)
+		this.previewGrid = new Grid({ x: 0.7, y: 0.5 }, 0.1, 4, 4, this.renderer)
 
 		this.mainGrid.show()
 		this.previewGrid.show()
@@ -45,7 +45,7 @@ export class Tetris implements EventObserver {
 		// this.particle = new Particles()
 		// await this.particle.init()
 		//
-		// this.score = new Score({ x: 0.8, y: 0.1 }, this.currentBlock.id, this.renderer)
+		this.score = new Score({ x: 0.8, y: 0.1 }, this.currentBlock.id, this.renderer)
 		//
 		this.setupEventListeners()
 		const startButton = new Button(this.renderer, "text-only", {
@@ -88,8 +88,9 @@ export class Tetris implements EventObserver {
 			{ obj: this.currentBlock, event: "keyboard" },
 			{ obj: this.nextBlock, event: "resize" },
 			{ obj: this.ghostBlock, event: "resize" },
-			// { obj: this.score, event: "resize" },
+			{ obj: this.score, event: "resize" },
 			{ obj: startButton, event: "resize" },
+			{ obj: startButton, event: "keyboard" },
 			{ obj: muteButton, event: "resize" },
 			{ obj: this.renderer, event: "keyboard" }, // to pause and play
 			{ obj: this, event: "keyboard" }, // to check hardpress
@@ -105,9 +106,9 @@ export class Tetris implements EventObserver {
 		else {
 			this.currentBlock.moveDown()
 		}
-		window.requestAnimationFrame(this.gameLoop)
 	}
-	gameOver() {
+	async gameOver() {
+		this.renderer.pauseLoop()
 		// this.gameSound.homeTheme.stop()
 		this.currentBlock.container.hide()
 		this.ghostBlock.container.hide()
@@ -116,31 +117,29 @@ export class Tetris implements EventObserver {
 		this.currentBlock.speed = 0
 		// this.gameSound.gameOver.play()
 		this.score.subPoint(100) // penality
-		this.mainGrid.drawSpiral({
-			whenFinshed: () => {
-				// this.renderer.stopLoop(this.gameLoop, this)
-				this.mainGrid.container.hide()
-				const restartButton = new Button(this.renderer, "text-only", {
-					yfrac: 0.5,
-					xfrac: 0.5,
-					text: "restart",
-					size: 150,
-					color: { fg: "#FFF", bg: "#fff" },
-					onClick: () => {
-						this.mainGrid.clear()
-						this.currentBlock.container.show()
-						this.nextBlock.container.show()
-						this.ghostBlock.container.show()
-						this.mainGrid.container.show()
-						this.currentBlock.speed = this.currentBlock.normalSpeed
-						this.renderer.gameLoop(this.gameLoop, this)
-					}
-				}, true)
-				this.listenEvents([
-					{ obj: restartButton, event: "resize" },
-				])
+		// this.mainGrid.clear()
+		await this.mainGrid.drawSpiral()
+		const restartButton = new Button(this.renderer, "text-only", {
+			yfrac: 0.5,
+			xfrac: 0.5,
+			text: "restart",
+			size: 150,
+			color: { fg: "#000", bg: "#fff" },
+			onClick: () => {
+				this.mainGrid.clear()
+				this.currentBlock.container.show()
+				this.nextBlock.container.show()
+				this.ghostBlock.container.show()
+				this.ghostBlock.shadow()
+				this.mainGrid.container.show()
+				this.currentBlock.speed = this.currentBlock.normalSpeed
+				this.renderer.gameLoop(this.gameLoop, this)
 			}
-		})
+		}, true)
+		this.listenEvents([
+			{ obj: restartButton, event: "resize" },
+			{ obj: restartButton, event: "keyboard" },
+		])
 	}
 	async newGeneration() {
 		if (this.hardPressed) {
@@ -166,19 +165,19 @@ export class Tetris implements EventObserver {
 			if (this.mainGrid.isEmptyRow(row)) break
 			if (this.mainGrid.checkIfRowIsFull(row)) {
 				completed++
-				// this.renderer.pauseLoop()
+				this.renderer.pauseLoop()
 				await this.mainGrid.clearEntireRow(row)
-				// this.renderer.startLoop()
+				this.renderer.startLoop()
 			} else if (completed > 0) {
 				// this.particle.drawWin()
-				// this.renderer.pauseLoop()
+				this.renderer.pauseLoop()
 				await this.mainGrid.moveDownRow(row, completed)
-				// this.renderer.startLoop()
+				this.renderer.startLoop()
 			}
 
 		}
 		if (completed != 0) {
-			// this.score.calculateScore(completed, this.currentBlock, this.gameSound)
+			this.score.calculateScore(completed, this.currentBlock)
 			// this.gameSound.score()// make sound
 		}
 		return completed

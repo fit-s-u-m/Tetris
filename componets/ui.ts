@@ -1,6 +1,6 @@
 import { EventObserver } from "./eventListener"
 import { Renderer } from "./renderer"
-import { BUTTONTYPE } from "./types"
+import { BUTTONTYPE, EVENT } from "./types"
 import Konva from "konva"
 
 export class Button implements EventObserver {
@@ -40,6 +40,7 @@ export class Button implements EventObserver {
 			x: xfrac * window.innerWidth,
 			y: yfrac * window.innerHeight,
 		});
+		console.log(xfrac * window.innerWidth, yfrac * window.innerHeight, `normal-ui ${this.button.getText().textArr[0].text}`)
 
 		simpleLabel.add(
 			new Konva.Text({
@@ -69,7 +70,7 @@ export class Button implements EventObserver {
 		simpleLabel.add(
 			new Konva.Tag({
 				fill: color.bg,
-				lineCap: "butt",
+				lineCap: "round",
 			})
 		);
 
@@ -85,6 +86,7 @@ export class Button implements EventObserver {
 		const position = simpleLabel.getPosition()
 		position.x -= simpleLabel.getSize().width / 2
 		simpleLabel.setPosition(position)
+
 		simpleLabel.on('click', () => {
 			const pressed = onClick()
 			if (pressed) {
@@ -92,30 +94,49 @@ export class Button implements EventObserver {
 			} else {
 				simpleLabel.getTag().fill("#aaa")
 			}
-			if (shouldDestroy)
-				simpleLabel.destroy()
+			if (shouldDestroy) {
+				this.button.remove()
+				this.button.destroy()
+				console.log(this.button)
+			}
 		})
 
 		this.button = simpleLabel
 		this.renderer.stage(this.button)
 	}
-	update(data: any, _event: string): void {
-		if (this.buttonType == "text-only") {
-			let textContainer = this.button.children
-			const text = textContainer[0]
-			if (text) {
-				const fontSize = this.size / 4
-				this.button.getText()
-					.fontSize(fontSize)
-					.fill(this.color.fg)
-				this.button.getTag().fill(this.color.bg)
-				const width = fontSize * this.text.length / 1.1
-				const x = (data.w) * this.fracPos.x
-				const y = (data.h) * this.fracPos.y
-				this.button.getText().setPosition({ x: x - width / 4, y })
+	update(data: any, event: EVENT): void {
+		if (event == "resize") {
+			if (this.buttonType == "text-only") {
+				let textContainer = this.button.children
+				const text = textContainer[0]
+				if (text) {
+					const fontSize = this.size / 4
+					const x = (data.w) * this.fracPos.x
+					const y = (data.h) * this.fracPos.y
+					console.log(x, y, `resize-ui ${this.button.getText().textArr[0].text}`)
+					this.button.setAttrs({
+						'fontSize': fontSize,
+						'x': x - fontSize, 'y': y,
+						'fill': this.color.fg
+					})
+					// this.button.getText()
+					// 	.fontSize(fontSize)
+					// 	.fill(this.color.fg)
+					// this.button.getTag().fill(this.color.bg)
+					// const width = fontSize * this.text.length / 1.1
+					// this.button.setPosition({ x, y })
+				}
 			}
 		}
 		else {
+			switch (data) {
+				case "q":
+					if (this.button) {
+						this.button.fire("click")
+					}
+					break
+			}
+
 		}
 	}
 }

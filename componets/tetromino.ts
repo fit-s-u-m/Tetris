@@ -203,4 +203,8 @@ export class GhostBlock extends Block {
 		}
 		this.redraw()
 	}
+	update(data: any, event: EVENT): void {
+		if (this.grid)
+			this.shadow()
+	}
 }

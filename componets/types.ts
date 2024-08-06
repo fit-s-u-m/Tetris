@@ -22,6 +22,7 @@ export type GAMESOUND = GameSound
 export type BUTTONTYPE = "text-only" | "text-with-rect"
 export type BLOCKTYPE = "ghost" | "preview" | "main"
 export type POSITION = { x: number, y: number }
-export type DRAWING = Konva.Rect | Konva.Sprite | Konva.Group
+export type TEXT = Konva.Label | Konva.Text
+export type DRAWING = Konva.Rect | Konva.Sprite | Konva.Group | TEXT
 export type GROUP = Konva.Group
 

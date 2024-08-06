@@ -15,6 +15,15 @@ export abstract class Block implements EventObserver {
 		this.grid = grid
 		this.currentOrientation
 			.forEach(pos => {
+				// let image = this.renderer.
+				// 	drawImage({
+				// 		id: this.id,
+				// 		x: this.grid.position.x + (pos.x * this.grid.cellSize),
+				// 		y: this.grid.position.y + (pos.y * this.grid.cellSize),
+				// 		width: grid.cellSize,
+				// 		height: grid.cellSize,
+				// 		container: this.container
+				// 	})
 				this.container.add(
 					this.renderer.
 						drawRoundSquare(
