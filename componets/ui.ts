@@ -1,15 +1,17 @@
 import { EventObserver } from "./eventListener"
 import { Renderer } from "./renderer"
-import { BUTTONTYPE, PIXICONTAINER, TEXT } from "./types"
+import { BUTTONTYPE, EVENT, GRID } from "./types"
+import Konva from "konva"
 
 export class Button implements EventObserver {
 	renderer: Renderer
-	button: PIXICONTAINER
+	button: Konva.Label
 	fracPos: { x: number, y: number }
 	size: number
 	buttonType: BUTTONTYPE
-	color: { fg: string, bg: string }
+	color: { fg: number, bg: number }
 	text: string
+	grid: GRID
 	constructor(
 		renderer: Renderer,
 		buttonType: BUTTONTYPE,
@@ -18,7 +20,8 @@ export class Button implements EventObserver {
 			xfrac: number,
 			text: string,
 			size: number,
-			color: { fg: string, bg: string },
+			color: { fg: number, bg: number },
+			grid: GRID,
 			onClick: () => boolean | void,
 		},
 		shouldDestroy: boolean = false) {
@@ -28,93 +31,99 @@ export class Button implements EventObserver {
 		this.color = options.color
 		this.size = options.size
 		this.text = options.text
+		this.grid = options.grid
 		if (buttonType == "text-with-rect")
 			this.createButton(options, shouldDestroy)
 		else if (buttonType == "text-only")
 			this.createTextButton(options, shouldDestroy)
 	}
 	createButton({ yfrac, xfrac, text, size, color, onClick }, shouldDestroy: boolean = false) {
-		const x = (window.innerWidth) * xfrac
-		const y = (window.innerHeight) * yfrac
-
-		const buttonContainer = this.renderer.createContainer()
-		const fontsize = size / 4
-		const width = fontsize * text.length / 1.1
-
-		const xcenter = x - width / 2
-		const ycenter = y
-
-		const buttonBg = this.renderer.drawRoundRect(xcenter, ycenter, width, size / 2, color.bg)
-		buttonBg.tint = "#000"
-
-		const textStyle = this.renderer.makeTextStyle(fontsize, color.fg)
-		const buttonText = this.renderer.drawText(text, x - width / 3, y + width / 16, textStyle)
-
-		buttonContainer.addChild(buttonBg, buttonText)
-		buttonContainer.interactive = true; // Enable interaction
-
-		buttonContainer.on('pointerdown', () => {
-			const pressed = onClick()
-			if (pressed) {
-				buttonBg.tint = "#f00"
-			} else {
-				buttonBg.tint = "#000"
-			}
-			if (shouldDestroy)
-				buttonContainer.destroy()
+		const fontSize = size / 4
+		var simpleLabel = new Konva.Label({
+			x: xfrac * (this.grid.position.x + this.grid.size.w / 2),
+			y: yfrac * (this.grid.position.y + this.grid.size.h)
 		});
-		this.button = buttonContainer
-		this.renderer.stage(buttonContainer)
+
+		simpleLabel.add(
+			new Konva.Text({
+				text,
+				fontFamily: 'Calibri',
+				fontSize,
+				padding: 5,
+				fill: this.renderer.color[9], // accent
+			})
+		);
+		this.button = simpleLabel
+		simpleLabel.on('click', () => {
+			onClick()
+			if (shouldDestroy)
+				this.button.destroy
+		})
 	}
 	createTextButton({ yfrac, xfrac, text, size, color, onClick }, shouldDestroy = false) {
 
-		const x = (window.innerWidth) * xfrac
-		const y = (window.innerHeight) * yfrac
+		const fontSize = size / 4
+		const gridRight = this.grid.position.x + this.grid.size.w - this.grid.cellSize / 2
+		const gridBottom = this.grid.position.y + this.grid.size.h
+		var simpleLabel = new Konva.Label({
+			x: xfrac * this.grid.size.w + gridRight,
+			y: yfrac * this.grid.size.h + gridBottom
+		});
 
-		const buttonContainer = this.renderer.createContainer()
-		const fontsize = size / 4
-		const width = fontsize * text.length / 1.1
+		simpleLabel.add(
+			new Konva.Tag({
+				fill: this.renderer.color[9],
+				lineCap: "round",
+				cornerRadius: 5
+			})
+		);
 
-		const textStyle = this.renderer.makeTextStyle(fontsize, color.fg)
-		const buttonText = this.renderer.drawText(text, x - width / 4, y, textStyle)
+		simpleLabel.add(
+			new Konva.Text({
+				text,
+				fontFamily: 'Calibri',
+				fontSize,
+				padding: 5,
+				fill: this.renderer.color[8],
+			})
+		);
+		const position = simpleLabel.getPosition()
+		position.x -= simpleLabel.getSize().width / 2
+		simpleLabel.setPosition(position)
 
-		buttonContainer.addChild(buttonText)
-		buttonContainer.interactive = true; // Enable interaction
-		buttonContainer.cursor = 'pointer'
-		buttonContainer.eventMode = 'static';
-
-		buttonContainer.on('pointerdown', () => {
+		simpleLabel.on('click', () => {
 			const pressed = onClick()
 			if (pressed) {
-				const newtextStyle = this.renderer.makeTextStyle(fontsize, color.bg)
-				buttonText.style = newtextStyle
+				simpleLabel.getTag().fill(this.renderer.color[8])
+				simpleLabel.getText().fill(this.renderer.color[9])
 			} else {
-				const newtextStyle = this.renderer.makeTextStyle(fontsize, color.fg)
-				buttonText.style = newtextStyle
+				simpleLabel.getTag().fill(this.renderer.color[9])
+				simpleLabel.getText().fill(this.renderer.color[8])
 			}
-			if (shouldDestroy)
-				buttonContainer.destroy()
-		});
-		this.renderer.stage(buttonContainer)
-		this.button = buttonContainer
+			if (shouldDestroy) {
+				this.button.remove()
+				this.button.destroy()
+			}
+		})
+
+		this.button = simpleLabel
+		this.renderer.stage(this.button)
 	}
-	update(data: any, _event: string): void {
+	update(data: any, event: EVENT): void {
 		if (this.buttonType == "text-only") {
+			const gridRight = this.grid.position.x + this.grid.size.w - this.grid.cellSize / 2
+			const gridBottom = this.grid.position.y + this.grid.size.h
 			let textContainer = this.button.children
 			const text = textContainer[0]
 			if (text) {
 				const fontSize = this.size / 4
-				const textStyle = this.renderer.makeTextStyle(fontSize, this.color.fg)
-				text.style = textStyle
-				const width = fontSize * this.text.length / 1.1
-				const x = (data.w) * this.fracPos.x
-				const y = (data.h) * this.fracPos.y
-				text.x = x - width / 4
-				text.y = y
-
+				const x = this.fracPos.x * this.grid.size.w + gridRight
+				const y = this.fracPos.y * this.grid.size.h + gridBottom
+				this.button.setAttrs({
+					'fontSize': fontSize,
+					'x': x - fontSize, 'y': y,
+				})
 			}
-		}
-		else {
 		}
 	}
 }

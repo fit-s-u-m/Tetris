@@ -1,6 +1,6 @@
 import { Renderer } from "./renderer"
 import { EventObserver } from "./eventListener"
-import { BLOCK, PIXICONTAINER, SIDE, TIME, BINARY, POSITION } from "./types"
+import { BLOCK, GROUP, SIDE, TIME, BINARY, POSITION } from "./types"
 
 
 export class Grid implements EventObserver {
@@ -12,20 +12,21 @@ export class Grid implements EventObserver {
 	size: { w: number, h: number }
 	fracPosition: { x: number, y: number }
 	fracMaxHeight: number
-	container: PIXICONTAINER
+	container: GROUP
 	renderer: Renderer
 	shadowGrid: number[][]
 	clearRowIndex = 0
 	moveDownIndex = 0
-	protected spiralIteration = 0
+	scale: number
+	// protected spiralIteration = 0
 	protected spiralIndices: { i: number, j: number }[]
 
-	constructor({ x, y }: { x: number, y: number }, maxHeight: number, numCol: number, numRow: number, renderer: Renderer) {
+	constructor({ x, y }: { x: number, y: number }, scale: number, numCol: number, numRow: number, renderer: Renderer) {
 		this.numCol = numCol;
 		this.numRow = numRow;
 		const margin = numRow / numCol
-		this.fracMaxHeight = maxHeight
-		this.cellSize_ = (maxHeight * window.innerHeight - margin) / numRow
+		this.cellSize_ = Math.abs(window.innerHeight - margin - y * window.innerHeight) / numRow
+		this.cellSize_ *= scale
 		this.size = { w: numCol * this.cellSize_, h: numRow * this.cellSize_ }
 
 		this.init()
@@ -33,9 +34,27 @@ export class Grid implements EventObserver {
 
 
 		this.fracPosition = { x, y }
+		this.scale = scale
 		const xpos = x * window.innerWidth - (this.size.w) / 2
 		const ypos = y * window.innerHeight
 		this.position = { x: xpos, y: ypos }
+		const windowData = { w: window.innerWidth, h: window.innerHeight }
+
+		if (windowData.w < windowData.h) {
+			// const endPoint = this.position.y + this.cellSize_ * this.numRow
+			// const leftOverSpace = data.h - endPoint
+			// this.position.y += leftOverSpace / 2
+			this.cellSize_ = Math.abs(this.scale * windowData.w - margin - this.fracPosition.x * windowData.w) / this.numCol
+			// this.cellSize_ = Math.abs(this.fracMaxHeight * Math.min(data.h, data.w) - margin - this.fracPosition.y * data.h) / this.numRow
+			this.size = { w: this.numCol * this.cellSize_, h: this.numRow * this.cellSize_ }
+
+			const xpos = this.fracPosition.x * window.innerWidth - (this.size.w) / 2
+			const ypos = this.fracPosition.y * window.innerHeight
+
+			// this.cellSize_ = (this.fracMaxHeight * Math.min(data.h, data.w) - margin) / this.numRow
+
+			this.position = { x: xpos, y: ypos }
+		}
 		this.container = renderer.createContainer()
 		this.renderer.stage(this.container)
 	}
@@ -56,12 +75,18 @@ export class Grid implements EventObserver {
 						rowIndex * this.cellSize_ + this.position.y,
 						this.cellSize_,
 						val)
-				this.container.addChild(square)
+				this.container.add(square)
 			}
 		}
 	}
 	get cellSize() {
 		return this.cellSize_
+	}
+	calculateSidePos(grid: Grid) {
+		this.position.x = grid.position.x + grid.size.w + 40
+		this.position.y = grid.position.y
+		this.fracPosition.x = grid.fracPosition.x + grid.size.w / window.innerWidth
+		this.fracPosition.y = grid.fracPosition.y
 	}
 	redraw() {
 		this.container.removeChildren()
@@ -92,11 +117,11 @@ export class Grid implements EventObserver {
 	blockLanded(block: BLOCK, offset: POSITION) {
 		// landed on the grid
 		const gridHeight = this.cellSize_ * this.numRow
-		const groundPos = this.container.getGlobalPosition().y + gridHeight
-		const blockPos = block.container.getGlobalPosition().y + block.container.getSize().height
+		const groundPos = this.container.getPosition().y + gridHeight
+		const blockPos = block.container.getPosition().y + block.container.getSize().height
 		if (blockPos >= groundPos)
 			return true
-		else { // collision with another tetromino
+		else { // collision with another tetromino.
 			const blockCoord = block.coordinate()
 			return this.checkBlockIsOnAnother(blockCoord, offset)
 		}
@@ -133,9 +158,9 @@ export class Grid implements EventObserver {
 	async clearEntireRow(row: number) {
 		for (let i = 0; i < this.numCol; i++) {
 			this.grid[row][i] = 0; // set to empty
-			await this.sleep(40)
+			await this.sleep(30)
 			this.redraw();
-			this.renderer.updateLoop()
+			// this.renderer.updateLoop()
 		}
 	}
 	sleep(ms: number) {
@@ -160,8 +185,8 @@ export class Grid implements EventObserver {
 			}
 			this.clearRow(rowIndex)
 			this.redraw()
-			this.renderer.updateLoop()
-			await this.sleep(30);
+			// this.renderer.updateLoop()
+			await this.sleep(20);
 		}
 
 	}
@@ -206,18 +231,23 @@ export class Grid implements EventObserver {
 
 		return result;
 	}
-	drawSpiral(calback: { whenFinshed: () => void; }) {
-		if (this.spiralIteration < this.numRow * this.numCol) {
-			const spiral = this.spiralIndices[this.spiralIteration]
+	async drawSpiral() {
+		let spiralIteration = 0
+
+		while (spiralIteration < this.numRow * this.numCol) {
+			const spiral = this.spiralIndices[spiralIteration]
 			const color = 8
 			this.grid[spiral.i][spiral.j] = color
 			this.redraw()
-			this.spiralIteration += 1
+			spiralIteration += 1
+			await this.sleep(10)
+
 		}
-		else {
-			this.spiralIteration = 0
-			calback.whenFinshed()
-		}
+		// else {
+		// 	this.spiralIteration = 0
+		// 	calback.whenFinshed()
+		// 	return
+		// }
 	}
 	clear() {
 		for (let i = 0; i < this.numRow; i++) {
@@ -234,16 +264,32 @@ export class Grid implements EventObserver {
 	update(data: any, event: string) { // when resized 
 		if (event == "resize") {
 			const margin = this.numRow / this.numCol
-			this.cellSize_ = (this.fracMaxHeight * Math.min(data.h, data.w) - margin) / this.numRow
+			this.cellSize_ = Math.abs(this.scale * window.innerHeight - margin - this.fracPosition.y * window.innerHeight) / this.numRow
+			// this.cellSize_ = Math.abs(this.fracMaxHeight * Math.min(data.h, data.w) - margin - this.fracPosition.y * data.h) / this.numRow
+			this.size = { w: this.numCol * this.cellSize_, h: this.numRow * this.cellSize_ }
 
-			const xpos = this.fracPosition.x * data.w - (this.numCol * this.cellSize_) / 2
-			const ypos = this.fracPosition.y * data.h
+			const xpos = this.fracPosition.x * window.innerWidth - (this.size.w) / 2
+			const ypos = this.fracPosition.y * window.innerHeight
+
+			// this.cellSize_ = (this.fracMaxHeight * Math.min(data.h, data.w) - margin) / this.numRow
+
 			this.position = { x: xpos, y: ypos }
 
 			if (data.w < data.h) {
-				const endPoint = this.position.y + this.cellSize_ * this.numRow
-				const leftOverSpace = data.h - endPoint
-				this.position.y += leftOverSpace / 2
+				// const endPoint = this.position.y + this.cellSize_ * this.numRow
+				// const leftOverSpace = data.h - endPoint
+				// this.position.y += leftOverSpace / 2
+				this.cellSize_ = Math.abs(data.w - margin - this.fracPosition.x * data.w) / this.numCol
+				this.cellSize_ *= this.scale
+				// this.cellSize_ = Math.abs(this.fracMaxHeight * Math.min(data.h, data.w) - margin - this.fracPosition.y * data.h) / this.numRow
+				this.size = { w: this.numCol * this.cellSize_, h: this.numRow * this.cellSize_ }
+
+				const xpos = this.fracPosition.x * window.innerWidth - (this.size.w) / 2
+				const ypos = this.fracPosition.y * window.innerHeight
+
+				// this.cellSize_ = (this.fracMaxHeight * Math.min(data.h, data.w) - margin) / this.numRow
+
+				this.position = { x: xpos, y: ypos }
 			}
 			this.redraw()
 		}

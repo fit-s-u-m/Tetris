@@ -1,62 +1,119 @@
-import * as  PIXI from "pixi.js"
 import { Block } from "./block"
 import { EventObserver } from "./eventListener"
-import { EVENT } from "./types"
+import { CALLBACK, DRAWING, EVENT, POSITION } from "./types"
+import * as  PIXI from "pixi.js"
+import Konva from "konva"
 
 
 export class Renderer implements EventObserver {
-	private app: PIXI.Application
+	app: Konva.Stage
+	layer: Konva.Layer
 	readonly color: string[]
 	private isPaused = false
+	private animation: Konva.Animation
+	private gameContext: any
 	constructor() {
 		this.color = [
-			"#FFFFFF",
-			"#FD3F59",
-			"#800080",
-			"#ffff00",
-			"#ff7f00",
-			"#00ffff",
-			"#7f7f7f",
-			"#00A200",
-			"#000000"
+			"#B7B7A4", // primry 
+			"#FD3F59", // I  red
+			"#4c2e5e", // T  purple
+			"#f6a432", // L  yellow
+			"#5e9786", // J  dark green
+			"#41b9df", // S  light blue
+			"#e4c397", // Z  wood color yelloish
+			"#f54c30", // o  orange
+			"#A5A58D", // secondary 
+			"#03120E", // accent
 		]
-		this.app = new PIXI.Application()
 	}
-	async initApp(bgColor: string) {
-		await this.app.init({ background: bgColor, resizeTo: window })
+	initApp() {
+		this.app = new Konva.Stage({
+			container: 'container', // ID of the container <div>
+			width: window.innerWidth,
+			height: window.innerHeight
+		});
+		this.layer = new Konva.Layer()
+
+		this.app.add(this.layer)
+		this.drawImage("../public/assets/bg/blue 3.jpg", 0, 0, this.app.width(), this.app.height())
 	}
-	addAppToCanvas() {
-		document.body.appendChild(this.app.canvas)
-	}
-	stage(drawing: PIXI.Graphics | PIXI.Container | PIXI.Sprite): void {
-		this.app.stage.addChild(drawing)
+	stage(drawing: any): void {
+		this.layer.add(drawing)
 	}
 	createContainer() {
-		return new PIXI.Container()
+		return new Konva.Group()
 	}
-	drawRoundSquare(x: number, y: number, s: number, c: number, alpha: number = 1): PIXI.Graphics {
-		return new PIXI.Graphics()
-			.roundRect(x, y, s, s, 5)
-			.fill({ color: this.color[c], alpha })
-			.stroke({ color: "#000", width: 1.1 })
+	drawRoundSquare(x: number, y: number, s: number, c: number, alpha: number = 1): Konva.Rect {
+		return new Konva.Rect({
+			x,
+			y,
+			width: s,
+			height: s,
+			fill: this.color[c],
+			stroke: "black",
+			lineCap: "round",
+			strokeWidth: 1,
+			opacity: alpha
+		})
 	}
-	drawRoundRect(x: number, y: number, sx: number, sy: number, c: string): PIXI.Graphics {
-		return new PIXI.Graphics()
-			.roundRect(x, y, sx, sy, 10)
-			.fill(c)
-			.stroke("#000")
+	drawText(text: string, x: number, y: number, fontSize: number, color: string) {
+		// var simpleLabel = new Konva.Label({ x, y });
+		const simple_text = new Konva.Text({
+			x, y,
+			text,
+			fontFamily: 'Calibri',
+			fontStyle: "bold",
+			fontSize,
+			fill: color,
+		})
+		return simple_text
 	}
-	drawRect(x: number, y: number, sx: number, sy: number, c: string): PIXI.Graphics {
-		return new PIXI.Graphics()
-			.rect(x, y, sx, sy)
-			.fill(c)
-			.stroke("#000")
+	drawRoundRect(x: number, y: number, sx: number, sy: number, c: string): Konva.Rect {
+		return new Konva.Rect({
+			x,
+			y,
+			width: sx,
+			height: sy,
+			fill: this.color[c],
+			stroke: "black",
+			lineCap: "round",
+			strokeWidth: 1,
+		})
 	}
-	drawSquare(x: number, y: number, s: number, c: number, alpha: number = 1): PIXI.Graphics {
-		return new PIXI.Graphics()
-			.rect(x, y, s, s)
-			.fill({ color: this.color[c], alpha })
-			.stroke("#000")
+	drawRect(x: number, y: number, sx: number, sy: number, c: string): Konva.Rect {
+		return new Konva.Rect({
+			x,
+			y,
+			width: sx,
+			height: sy,
+			fill: c,
+			stroke: "black",
+			strokeWidth: 1,
+		})
+	}
+	drawBorder(x: number, y: number, sx: number, sy: number, w: number): Konva.Rect {
+		return new Konva.Rect({
+			x,
+			y,
+			width: sx,
+			height: sy,
+			stroke: "red",
+			cornerRadius: 10,
+			strokeWidth: 100,
+		})
+	}
+	drawSquare(x: number, y: number, s: number, c: number, alpha: number = 1): Konva.Rect {
+		return new Konva.Rect({
+			x,
+			y,
+			width: s,
+			height: s,
+			fill: this.color[c],
+			stroke: "black",
+			strokeWidth: 1,
+			opacity: alpha
+		})
+
 	}
 	makeTextStyle(fontSize: number, color: string): PIXI.TextStyle {
 		const style = new PIXI.TextStyle({
@@ -77,46 +134,63 @@ export class Renderer implements EventObserver {
 		return style
 
 	}
-	drawText(text: string, x: number, y: number, style: PIXI.TextStyle): PIXI.Text {
-		const textDrawing = new PIXI.Text({ text, style })
-		textDrawing.x = x
-		textDrawing.y = y
-		return textDrawing
-
-	}
-
 	drawCircle(x: number, y: number, r: number, c: number) {
 		return new PIXI.Graphics()
 			.circle(x, y, r)
 			.fill(this.color[c])
 	}
+	drawImage(path: string, x: number, y: number, width: number, height: number) {
+		const imageObj = new Image();
+		imageObj.onload = () => {
+			const image = new Konva.Image({
+				x, y,
+				image: imageObj,
+				width: (width * 2),
+				height
+			});
+			this.layer.add(image)
+		};
+		imageObj.src = path
 
-	gameLoop(callback: PIXI.TickerCallback<any>, context: any) {
-		this.app.ticker.autoStart = false;
-		this.app.ticker.add(callback, context)
 	}
-	delayGame(time: number) {
-		this.app.ticker.stop()
-		// block.speed = 0
+	drawTetromino({ id, width, x, y, height, container }: { id: number, width: number, x: number, y: number, height: number, container: Konva.Group }) {
+		const tetrominos = ['I', 'T', 'L', 'J', 'S', 'Z', 'O']
+		const path = `../public/assets/tetrominos/${tetrominos[id - 1]}.jpg`
 
-		setTimeout(
-			() => {
-				this.app.ticker.start()
-				// block.speed = 0
-			}
-			, time)
+
+		const imageObj = new Image();
+		imageObj.onload = () => {
+			const image = new Konva.Image({
+				x,
+				y,
+				image: imageObj,
+				width,
+				height,
+				lineCap: "round",
+				lineJoin: "round",
+				cornerRadius: 5
+			});
+			// image.scaleX(0.95)
+			// image.scaleY(0.95)
+			container.add(image)
+
+		}; imageObj.src = path
 	}
-	stopLoop(callback: PIXI.TickerCallback<any>, context: any) {
-		this.app.ticker.remove(callback, context)
+
+	gameLoop(callback: any, context?: any) {
+		this.animation = new Konva.Animation(callback.bind(context), this.layer)
+		this.animation.start()
+		this.gameContext = context
 	}
 	pauseLoop() {
-		this.app.ticker.stop()
+		this.animation.stop()
+		this.gameContext.gameOn = false
+		this.gameContext.currentBlock.isGameOn = false
 	}
 	startLoop() {
-		this.app.ticker.start()
-	}
-	updateLoop() {
-		this.app.ticker.update()
+		this.animation.start()
+		this.gameContext.gameOn = true
+		this.gameContext.currentBlock.isGameOn = true
 	}
 	update(data: any, event: EVENT): void {
 		if (event == "keyboard") {

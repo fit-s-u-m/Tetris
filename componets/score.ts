@@ -1,11 +1,14 @@
-import { BLOCK, EVENT, GAMESOUND, RENDERER, TEXT, TEXTSTYLE } from "./types";
+import { EVENT, GAMESOUND, GRID, RENDERER, TEXT } from "./types";
 import { EventObserver } from "./eventListener";
+import { MainBlock } from "./tetromino";
 export class Score implements EventObserver {
+	scoreTextNum: TEXT
 	scoreText: TEXT
+	levelTextNum: TEXT
 	levelText: TEXT
-	numLineClearedText: TEXT
-	scoreTextStyle: TEXTSTYLE
-	levelTextStyle: TEXTSTYLE
+	clearLineNum: TEXT
+	clearLineText: TEXT
+	nextText: TEXT
 	score: number
 	level: number
 	fontSize: number
@@ -13,25 +16,45 @@ export class Score implements EventObserver {
 	renderer: RENDERER
 	numLineCleared: number = 0
 	life: number = 3
-	constructor({ x, y }: { x: number, y: number }, color: number, renderer: RENDERER) {
+	mainGrid: GRID
+	previewGrid: GRID
+	constructor({ x, y, mainGrid, previewGrid }: { x: number, y: number, mainGrid: GRID, previewGrid: GRID }, color: number, renderer: RENDERER) {
 		this.fontSize = window.innerWidth / 40
-		const xpos = x * window.innerWidth - this.fontSize
-		const ypos = y * window.innerHeight
-		this.scoreTextStyle = renderer.makeTextStyle(this.fontSize, renderer.color[color])
-		this.levelTextStyle = renderer.makeTextStyle(this.fontSize, "#fff")
+		const gridRight = mainGrid.position.x + mainGrid.size.w
+		const gridLeft = mainGrid.position.x
+		const gridBottom = mainGrid.position.y + mainGrid.cellSize * (mainGrid.numRow - 2)
+		const gridMidY = mainGrid.position.y + mainGrid.size.h / 2
+		const gridMidX = mainGrid.position.x + mainGrid.size.w / 2
+		const previewGridX = previewGrid.position.x
 
-		this.scoreText = renderer.drawText("Score 0", xpos, ypos, this.scoreTextStyle)
-		this.levelText = renderer.drawText("Level 1", xpos, ypos + this.fontSize, this.levelTextStyle)
-		this.numLineClearedText = renderer.drawText(`line cleared  ${this.numLineCleared}`, this.fontSize, ypos + this.fontSize, this.levelTextStyle)
+
+		this.scoreTextNum = renderer.drawText("0", gridMidX, 0, this.fontSize, renderer.color[color])
+		this.scoreText = renderer.drawText("Score", gridLeft, 0, this.fontSize, renderer.color[8])
+		this.levelTextNum = renderer.drawText("1", gridRight, gridBottom + this.fontSize, this.fontSize, renderer.color[8])
+		this.levelText = renderer.drawText("Level ", gridRight, gridBottom, this.fontSize, renderer.color[8])
+		this.clearLineText = renderer.drawText('clearLine', gridLeft, gridBottom, this.fontSize, renderer.color[8])
+		const clearLineTextwidth = this.clearLineText.getTextWidth()
+		this.clearLineText.setAttr("x", gridLeft - clearLineTextwidth)
+		this.clearLineNum = renderer.drawText(this.numLineCleared.toString(), gridLeft - clearLineTextwidth / 2, gridBottom + this.fontSize, this.fontSize, renderer.color[8])
+
+		this.nextText = renderer.drawText("Next", previewGridX, 0, this.fontSize, renderer.color[8])
+
 		this.score = 0
 		this.level = 1
 		this.fracPos = { x, y }
+		renderer.stage(this.scoreTextNum)
 		renderer.stage(this.scoreText)
+		renderer.stage(this.levelTextNum)
 		renderer.stage(this.levelText)
-		renderer.stage(this.numLineClearedText)
+		renderer.stage(this.clearLineNum)
+		renderer.stage(this.clearLineText)
+		renderer.stage(this.nextText)
+		this.mainGrid = mainGrid
+		this.previewGrid = previewGrid
+
 		this.renderer = renderer
 	}
-	calculateScore(numLineCleared: number, block: BLOCK, sound: GAMESOUND) {
+	calculateScore(numLineCleared: number, block: MainBlock) {
 		let muliplier: number
 		if (numLineCleared == 1) {
 			muliplier = 40
@@ -45,19 +68,17 @@ export class Score implements EventObserver {
 		else { // 4
 			muliplier = 1200
 		}
-		this.scoreText.text = `Score ${this.score += muliplier * (this.level + 1)}`
+		this.scoreTextNum.setAttr("text", `${this.score += muliplier * (this.level + 1)}`)
 		this.numLineCleared += numLineCleared
-		this.numLineClearedText.text = `line cleared ${this.numLineCleared}`
-		sound.score()
+		this.clearLineNum.setAttr('text', `${this.numLineCleared}`)
 		if (this.numLineCleared % 10 == 0) {
-			block.normalSpeed += this.level
-			sound.levelUp()
+			block.normalSpeed += this.level / 2 // TODO: make reasonable speed
 			this.levelUP()
 		}
 	}
 	subPoint(x: number) {
 		if (this.score - x >= 0) {
-			this.scoreText.text = `Score ${this.score -= x}`
+			this.scoreTextNum.setAttr('text', `${this.score -= x}`)
 		}
 		this.life -= 1
 		if (this.life <= 0) { // if you end your life reset the score
@@ -66,29 +87,78 @@ export class Score implements EventObserver {
 		}
 	}
 	levelUP() {
-		this.levelText.text = `Level ${++this.level}`
+		this.levelTextNum.setAttr('text', `${++this.level}`)
 	}
 	update(data: any, event: EVENT): void {
 		if (event == "resize") {
-			const xpos = this.fracPos.x * data.w - this.fontSize
-			const ypos = this.fracPos.y * data.h
-			this.fontSize = window.innerWidth / 40
-			this.scoreTextStyle = this.renderer.makeTextStyle(this.fontSize, "blue")
-			this.scoreText.x = xpos
-			this.scoreText.y = ypos
-			this.scoreText.style = this.scoreTextStyle
+			this.fontSize = data.w / 40
+			if (data.w < 800) {
+				this.fontSize = data.w / 30
+			}
+			else if (data.w < 700) {
+				this.fontSize = data.w / 20
+			}
+			const gridRight = this.mainGrid.position.x + this.mainGrid.size.w
+			const gridLeft = this.mainGrid.position.x
+			const gridBottom = this.mainGrid.position.y + this.mainGrid.cellSize * (this.mainGrid.numRow - 2)
+			const gridMidY = this.mainGrid.position.y + this.mainGrid.size.h / 2
+			const gridMidX = this.mainGrid.position.x + this.mainGrid.size.w / 2
+			const previewGridX = this.previewGrid.position.x
+			this.clearLineText.setAttr("fontSize", this.fontSize)
+			const clearLineTextwidth = this.clearLineText.getWidth()
 
-			this.levelTextStyle = this.renderer.makeTextStyle(this.fontSize, "white")
-			this.levelText.x = xpos
-			this.levelText.y = ypos + this.fontSize
-			this.levelText.style = this.levelTextStyle
 
-			this.numLineClearedText.style = this.levelTextStyle
+			this.scoreTextNum.setAttrs({
+				x: gridMidX,
+				y: 0,
+				fontSize: this.fontSize,
+				fill: this.renderer.color[8],
+			})
+
+			this.scoreText.setAttrs({
+				x: gridLeft,
+				y: 0,
+				fontSize: this.fontSize,
+				fill: this.renderer.color[8],
+			})
+
+			this.levelTextNum.setAttrs({
+				x: gridRight,
+				y: gridBottom + this.fontSize,
+				fontSize: this.fontSize,
+				fill: this.renderer.color[8],
+			})
+			this.levelText.setAttrs({
+				x: gridRight,
+				y: gridBottom,
+				fontSize: this.fontSize,
+				fill: this.renderer.color[8],
+			})
+			this.clearLineNum.setAttrs({
+				x: gridLeft - clearLineTextwidth / 2,
+				y: gridBottom + this.fontSize,
+				fill: this.renderer.color[8],
+				fontSize: this.fontSize,
+			})
+			this.clearLineText.setAttrs({
+				x: gridLeft - clearLineTextwidth,
+				y: gridBottom,
+				fontSize: this.fontSize,
+				fill: this.renderer.color[8],
+			})
+			this.nextText.setAttrs({
+				x: previewGridX,
+				y: 0,
+				fontSize: this.fontSize,
+				fill: this.renderer.color[8],
+			})
 		}
 	}
 	changeColor(color: number) {
-		this.scoreTextStyle = this.renderer.makeTextStyle(this.fontSize, this.renderer.color[color])
-		this.scoreText.style = this.scoreTextStyle
+		this.scoreTextNum.setAttrs({
+			fontSize: this.fontSize,
+			fill: this.renderer.color[color]
+		})
 	}
 
 }
