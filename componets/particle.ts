@@ -17,7 +17,7 @@ export class Particles {
 			win: "../public/assets/particles/win.json",
 			lose: "../public/assets/particles/lose.json",
 			levelUp: "../public/assets/particles/levelUp.json",
-			home: "../public/assets/particles/home.json"
+			home: "../public/assets/particles/bg2.json"
 		}
 	}
 	async init() {
@@ -27,7 +27,7 @@ export class Particles {
 			url: this.urls.home,
 			index: 1
 		})
-		this.homeParticles.push(tsParticles.domItem(0))
+		// this.homeParticles.push(tsParticles.domItem(0))
 	}
 	async drawWin() {
 		await tsParticles.load({

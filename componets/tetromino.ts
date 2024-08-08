@@ -1,5 +1,5 @@
 import { Block } from "./block"
-import { EVENT, GRID, RENDERER } from "./types"
+import { EVENT, GAMESOUND, GRID, RENDERER } from "./types"
 import { tetrominoShapes } from "../util/tetrominoData"
 
 export class MainBlock extends Block {
@@ -9,18 +9,21 @@ export class MainBlock extends Block {
 	rotationState: 0 | 1 | 2 | 3 = 0
 	tetromino: string
 	ghost: GhostBlock
-	constructor(renderer: RENDERER) {
+	gameSound: GAMESOUND
+	isGameOn: boolean
+	constructor(renderer: RENDERER, gameSound: GAMESOUND) {
 		super()
 		this.renderer = renderer
 		this.container = renderer.createContainer() // create a container at the start
 		renderer.stage(this.container)
 
-		const tetrominos = ['I', 'T', 'J', 'L', 'S', 'Z', 'O']
+		const tetrominos = ['I', 'T', 'L', 'J', 'S', 'Z', 'O']
 		const randomNum = Math.floor(Math.random() * 6)
 		this.id = randomNum + 1
 		this.tetromino = tetrominos[randomNum]
 		this.orientation = tetrominoShapes[tetrominos[randomNum]].shapes
 		this.currentOrientation = this.orientation[this.rotationState]
+		this.gameSound = gameSound
 	}
 	// movement
 	moveDown(speed: number = this.normalSpeed) {
@@ -69,11 +72,24 @@ export class MainBlock extends Block {
 		}
 		this.redraw()
 	}
+	private checkIfEqual(arr: { x: number, y: number }[], arr2: { x: number, y: number }[]): boolean {
+		for (let i = 0; i < arr.length; i++) {
+			const oneNotEqual = arr[i].x != arr2[i].x ||
+				arr[i].y != arr2[i].y
+			if (oneNotEqual)
+				return false
+		}
+		return true
+	}
 	rotateCW() {
 		const beforeRotate = this.rotationState
 		this.rotationState === 3 ? this.rotationState = 0 : this.rotationState++
+		const prevState = this.currentOrientation
 		this.currentOrientation = this.orientation[this.rotationState]
+		if (this.checkIfEqual(prevState, this.currentOrientation)) // if the state doesn't change return
+			return
 		this.redraw()
+		this.gameSound.playNote()
 		if (!this.grid.isValidPosition(this, { x: 0, y: 0 })) {
 			const kickKey = `${beforeRotate}-${this.rotationState}`;
 			const kicks = tetrominoShapes[this.tetromino].wallKicks[kickKey]
@@ -83,13 +99,14 @@ export class MainBlock extends Block {
 					position.x += kick[0] * this.grid.cellSize
 					position.y += kick[1] * this.grid.cellSize
 					this.container.position(position)
+					this.ghost.shadow()
 					return
 				}
 			}
 			this.rotateCCW()
 		}
-		this.redraw()
 		this.ghost.shadow()
+		this.redraw()
 	}
 	update(data: any, event: EVENT): void {
 		if (event == "resize") {
@@ -98,7 +115,8 @@ export class MainBlock extends Block {
 			if (this.grid)
 				this.redraw()
 		}
-		else if (event == "keyboard") {
+		else if (event == "keyboard" && this.isGameOn) {
+
 			switch (data) {
 				case "k":
 				case "ArrowUp":
@@ -151,12 +169,13 @@ export class PreviewBlock extends Block {
 	}
 	createNew() {
 		const tetrominos = ['I', 'T', 'J', 'L', 'S', 'Z', 'O']
-		const randomNum = Math.floor(Math.random() * 6)
+		const randomNum = Math.floor(Math.random() * 7)
 		this.id = randomNum + 1
 		this.orientation = tetrominoShapes[tetrominos[randomNum]].shapes
 		this.currentOrientation = this.orientation[0]
 		this.redraw()
 	}
+
 }
 export class GhostBlock extends Block {
 	private block: MainBlock
@@ -171,6 +190,21 @@ export class GhostBlock extends Block {
 		this.alpha = 0.5
 		this.block = block
 	}
+	showBlock(grid: GRID): void {
+		this.grid = grid
+		this.currentOrientation
+			.forEach(pos => {
+				this.container.add(
+					this.renderer.
+						drawRoundSquare(
+							this.grid.position.x + (pos.x * this.grid.cellSize),
+							this.grid.position.y + (pos.y * this.grid.cellSize),
+							grid.cellSize,
+							this.id,
+							0.8
+						))
+			})
+	}
 	shadow() {
 		this.orientation = this.block.orientation
 		this.currentOrientation = this.block.currentOrientation
@@ -179,17 +213,17 @@ export class GhostBlock extends Block {
 
 		// Calculate the block's coordinates on the grid
 		const blockPos = this.block.container.position()
-		const rows = new Set()
-		const nextRotation = this.block.rotationState === 3 ? 0 : this.block.rotationState + 1
-		const nextOrientation = this.orientation[nextRotation]
-
-		for (const pos of nextOrientation) {
-			rows.add(pos.x)
-		}
-		const numOfRow = rows.size
+		// const rows = new Set()
+		// const nextRotation = this.block.rotationState === 3 ? 0 : this.block.rotationState + 1
+		// const nextOrientation = this.orientation[nextRotation]
+		//
+		// for (const pos of nextOrientation) {
+		// 	rows.add(pos.x)
+		// }
+		// const numOfRow = rows.size
 		const blockCoord = {
 			x: Math.round(blockPos.x / this.grid.cellSize),
-			y: Math.round((blockPos.y) / this.grid.cellSize) + numOfRow
+			y: Math.round((blockPos.y) / this.grid.cellSize)
 		}
 		const position = {
 			x: blockCoord.x * this.grid.cellSize,

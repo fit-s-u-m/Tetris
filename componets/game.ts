@@ -1,18 +1,18 @@
-import { Grid } from "./grid.ts"
+import { Grid } from "./grid"
 import { Renderer } from "./renderer"
 import { GhostBlock, PreviewBlock, MainBlock } from "./tetromino"
 import { EventListener, EventObserver } from "./eventListener"
 import { EVENT, EVENTLISTENER, GAMESOUND, GRID, LISTENER, RENDERER, SCORE } from "./types"
 import { Score } from "./score"
-// import { GameSound } from "./sound.ts"
-import { Button } from "./ui.ts"
-// import { Particles } from "./particle.ts"
+import { GameSound } from "./sound.ts"
+import { Button } from "./ui"
+import { Particles } from "./particle.ts"
 
 export class Tetris implements EventObserver {
 	eventListener: EVENTLISTENER
 	renderer: RENDERER
 	score: SCORE
-	// gameSound: GAMESOUND
+	gameSound: GAMESOUND
 	mainGrid: GRID
 	previewGrid: GRID
 	currentBlock: MainBlock
@@ -20,63 +20,67 @@ export class Tetris implements EventObserver {
 	ghostBlock: GhostBlock
 	muted: boolean = false
 	hardPressed = false
-	// particle: Particles // TODO: 
+	particle: Particles // TODO: 
+	gameOn = false
 	constructor() {
 		this.renderer = new Renderer()
 		this.eventListener = new EventListener()
+		this.gameSound = new GameSound()
 		this.init()
 	}
 	private init() {
 		this.renderer.initApp()  // set background
 	}
-	startGame() {
-		this.mainGrid = new Grid({ x: 0.5, y: 0 }, 1, 10, 20, this.renderer)
-		this.previewGrid = new Grid({ x: 0.7, y: 0.5 }, 0.1, 4, 4, this.renderer)
+	async startGame() {
+		this.mainGrid = new Grid({ x: 0.5, y: 0.05 }, 1, 10, 20, this.renderer)
+		this.previewGrid = new Grid({ x: 0.7, y: 0.05 }, 0.2, 4, 4, this.renderer)
+		this.previewGrid.calculateSidePos(this.mainGrid)
 
 		this.mainGrid.show()
 		this.previewGrid.show()
-
 		this.nextBlock = new PreviewBlock(this.renderer, this.previewGrid)
-		this.currentBlock = new MainBlock(this.renderer)
+		this.currentBlock = new MainBlock(this.renderer, this.gameSound)
 		this.ghostBlock = new GhostBlock(this.currentBlock)
 
 		// simple label
 		this.currentBlock.setShadow(this.ghostBlock)
-		// this.particle = new Particles()
-		// await this.particle.init()
-		//
-		this.score = new Score({ x: 0.8, y: 0.1 }, this.currentBlock.id, this.renderer)
-		//
+
+		this.particle = new Particles()
+		await this.particle.init()
+		this.score = new Score({ x: 0.8, y: 0.1, mainGrid: this.mainGrid, previewGrid: this.previewGrid }, this.currentBlock.id, this.renderer)
 		this.setupEventListeners()
+		//
 		const startButton = new Button(this.renderer, "text-only", {
-			yfrac: 0.4,
-			xfrac: 0.5,
+			yfrac: -0.5,
+			xfrac: -0.5,
 			text: "start",
 			size: 150,
-			color: { fg: "fff", bg: "#fff" },
+			color: { fg: 8, bg: 9 },
+			grid: this.mainGrid,
 			onClick: () => {
-				// this.gameSound.startMusic()
+				this.gameSound.startMusic()
 				this.currentBlock.showBlock(this.mainGrid)
 				this.ghostBlock.shadow()
 
 				this.renderer.gameLoop(this.gameLoop, this)
 				this.mainGrid.clear()
+				// this.currentBlock.isGameOn = this.gameOn
+				this.gameOn = true
 			}
 		}, true)
 		const muteButton = new Button(this.renderer, "text-only", {
-			yfrac: 0.2,
-			xfrac: 0.1,
+			yfrac: -1,
+			xfrac: -1,
 			text: "mute",
 			size: 50,
-			color: { fg: "#fff", bg: "#aaa" },
+			color: { fg: 8, bg: 9 },
+			grid: this.mainGrid,
 			onClick: () => {
 				this.muted = !this.muted
 				if (this.muted)
-					console.log("muted")
-				// this.gameSound.mute()
+					this.gameSound.mute()
 				else
-					console.log("unmuted")
-				// this.gameSound.unMute()
+					this.gameSound.unMute()
 				return this.muted
 			}
 
@@ -90,7 +94,6 @@ export class Tetris implements EventObserver {
 			{ obj: this.ghostBlock, event: "resize" },
 			{ obj: this.score, event: "resize" },
 			{ obj: startButton, event: "resize" },
-			{ obj: startButton, event: "keyboard" },
 			{ obj: muteButton, event: "resize" },
 			{ obj: this.renderer, event: "keyboard" }, // to pause and play
 			{ obj: this, event: "keyboard" }, // to check hardpress
@@ -98,6 +101,7 @@ export class Tetris implements EventObserver {
 		this.mainGrid.colorAll(8)// color grid black
 	}
 	gameLoop = () => {
+		this.currentBlock.isGameOn = this.gameOn
 		if (this.mainGrid.reachTop())  // game over
 			this.gameOver()
 		else if (this.mainGrid.blockLanded(this.currentBlock, { x: 0, y: 1 }) || this.hardPress()) {
@@ -108,23 +112,23 @@ export class Tetris implements EventObserver {
 		}
 	}
 	async gameOver() {
+		this.gameOn = false
 		this.renderer.pauseLoop()
-		// this.gameSound.homeTheme.stop()
+		this.gameSound.gameOver()
 		this.currentBlock.container.hide()
 		this.ghostBlock.container.hide()
 		this.nextBlock.container.hide()
 
 		this.currentBlock.speed = 0
-		// this.gameSound.gameOver.play()
 		this.score.subPoint(100) // penality
-		// this.mainGrid.clear()
 		await this.mainGrid.drawSpiral()
 		const restartButton = new Button(this.renderer, "text-only", {
-			yfrac: 0.5,
-			xfrac: 0.5,
+			yfrac: -0.5,
+			xfrac: -0.5,
 			text: "restart",
 			size: 150,
-			color: { fg: "#000", bg: "#fff" },
+			color: { fg: 8, bg: 9 },
+			grid: this.mainGrid,
 			onClick: () => {
 				this.mainGrid.clear()
 				this.currentBlock.container.show()
@@ -134,24 +138,30 @@ export class Tetris implements EventObserver {
 				this.mainGrid.container.show()
 				this.currentBlock.speed = this.currentBlock.normalSpeed
 				this.renderer.gameLoop(this.gameLoop, this)
+				this.gameOn = true
+				this.gameSound.startMusic()
+				this.score.level = 1
+				this.score.levelUP()
 			}
 		}, true)
 		this.listenEvents([
 			{ obj: restartButton, event: "resize" },
-			{ obj: restartButton, event: "keyboard" },
 		])
 	}
 	async newGeneration() {
 		if (this.hardPressed) {
+			this.gameSound.hardDrop()
 			this.mainGrid.addBlock(this.ghostBlock);
 			this.hardPress(true)// toogle is back off
 		}
 		else
 			this.mainGrid.addBlock(this.currentBlock);
 
-		// this.gameSound.collison()
+		this.gameSound.crash()
 		// clear a row
+		this.ghostBlock.container.hide()
 		await this.clearRow() // check and clear row
+		this.ghostBlock.container.show()
 
 		this.currentBlock.createNew(this.nextBlock)
 		this.ghostBlock.shadow()
@@ -178,7 +188,7 @@ export class Tetris implements EventObserver {
 		}
 		if (completed != 0) {
 			this.score.calculateScore(completed, this.currentBlock)
-			// this.gameSound.score()// make sound
+			this.gameSound.collectPoint()// make sound
 		}
 		return completed
 	}
@@ -198,6 +208,7 @@ export class Tetris implements EventObserver {
 		});
 
 		window.addEventListener('keydown', (event) => {
+			event.preventDefault()
 			const data = event.key
 			this.eventListener.notifyEventObserver(data, "keyboard")
 		});
@@ -209,14 +220,10 @@ export class Tetris implements EventObserver {
 		return this.hardPressed
 	}
 	update(data: any, event: EVENT): void {
-		if (event == "keyboard") {
+		if (event == "keyboard" && this.gameOn) {
 			switch (data) {
 				case " ":
 					this.hardPress(true)
-					break
-				case "Enter":
-					// this.renderer.startLoop()
-					this.startGame()
 					break
 
 			}

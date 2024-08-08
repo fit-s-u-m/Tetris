@@ -11,17 +11,19 @@ export class Renderer implements EventObserver {
 	readonly color: string[]
 	private isPaused = false
 	private animation: Konva.Animation
+	private gameContext: any
 	constructor() {
 		this.color = [
-			"#222222",
-			"#FD3F59",
-			"#800080",
-			"#ffff00",
-			"#ff7f00",
-			"#00ffff",
-			"#7f7f7f",
-			"#00A200",
-			"#000000"
+			"#B7B7A4", // primry 
+			"#FD3F59", // I  red
+			"#4c2e5e", // T  purple
+			"#f6a432", // L  yellow
+			"#5e9786", // J  dark green
+			"#41b9df", // S  light blue
+			"#e4c397", // Z  wood color yelloish
+			"#f54c30", // o  orange
+			"#A5A58D", // secondary 
+			"#03120E", // accent
 		]
 	}
 	initApp() {
@@ -31,7 +33,9 @@ export class Renderer implements EventObserver {
 			height: window.innerHeight
 		});
 		this.layer = new Konva.Layer()
+
 		this.app.add(this.layer)
+		this.drawImage("../public/assets/bg/blue 3.jpg", 0, 0, this.app.width(), this.app.height())
 	}
 	stage(drawing: any): void {
 		this.layer.add(drawing)
@@ -49,6 +53,7 @@ export class Renderer implements EventObserver {
 			stroke: "black",
 			lineCap: "round",
 			strokeWidth: 1,
+			opacity: alpha
 		})
 	}
 	drawText(text: string, x: number, y: number, fontSize: number, color: string) {
@@ -59,7 +64,6 @@ export class Renderer implements EventObserver {
 			fontFamily: 'Calibri',
 			fontStyle: "bold",
 			fontSize,
-			padding: 10,
 			fill: color,
 		})
 		return simple_text
@@ -85,6 +89,17 @@ export class Renderer implements EventObserver {
 			fill: c,
 			stroke: "black",
 			strokeWidth: 1,
+		})
+	}
+	drawBorder(x: number, y: number, sx: number, sy: number, w: number): Konva.Rect {
+		return new Konva.Rect({
+			x,
+			y,
+			width: sx,
+			height: sy,
+			stroke: "red",
+			cornerRadius: 10,
+			strokeWidth: 100,
 		})
 	}
 	drawSquare(x: number, y: number, s: number, c: number, alpha: number = 1): Konva.Rect {
@@ -124,9 +139,23 @@ export class Renderer implements EventObserver {
 			.circle(x, y, r)
 			.fill(this.color[c])
 	}
-	drawImage({ id, width, x, y, height, container }: { id: number, width: number, x: number, y: number, height: number, container: Konva.Group }) {
-		const tetrominos = ['I', 'T', 'J', 'L', 'S', 'Z', 'O']
-		const path = `../public/assets/${tetrominos[id - 1]}.png`
+	drawImage(path: string, x: number, y: number, width: number, height: number) {
+		const imageObj = new Image();
+		imageObj.onload = () => {
+			const image = new Konva.Image({
+				x, y,
+				image: imageObj,
+				width: (width * 2),
+				height
+			});
+			this.layer.add(image)
+		};
+		imageObj.src = path
+
+	}
+	drawTetromino({ id, width, x, y, height, container }: { id: number, width: number, x: number, y: number, height: number, container: Konva.Group }) {
+		const tetrominos = ['I', 'T', 'L', 'J', 'S', 'Z', 'O']
+		const path = `../public/assets/tetrominos/${tetrominos[id - 1]}.jpg`
 
 
 		const imageObj = new Image();
@@ -136,44 +165,33 @@ export class Renderer implements EventObserver {
 				y,
 				image: imageObj,
 				width,
-				height
+				height,
+				lineCap: "round",
+				lineJoin: "round",
+				cornerRadius: 5
 			});
+			// image.scaleX(0.95)
+			// image.scaleY(0.95)
 			container.add(image)
 
-		};
-		imageObj.src = path
+		}; imageObj.src = path
 	}
 
 	gameLoop(callback: any, context?: any) {
 		this.animation = new Konva.Animation(callback.bind(context), this.layer)
 		this.animation.start()
+		this.gameContext = context
 	}
-	// delayGame(time: number) {
-	// 	this.app.ticker.stop()
-	// 	// block.speed = 0
-	//
-	// 	setTimeout(
-	// 		() => {
-	// 			this.app.ticker.start()
-	// 			// block.speed = 0
-	// 		}
-	// 		, time)
-	// }
-	// stopLoop(callback: PIXI.TickerCallback<any>, context: any) {
-	// 	this.app.ticker.remove(callback, context)
-	// }
 	pauseLoop() {
 		this.animation.stop()
+		this.gameContext.gameOn = false
+		this.gameContext.currentBlock.isGameOn = false
 	}
 	startLoop() {
 		this.animation.start()
+		this.gameContext.gameOn = true
+		this.gameContext.currentBlock.isGameOn = true
 	}
-	// updateLoop() {
-	// 	this.app.ticker.update()
-	// }
-	// getMid() {
-	// 	return { x: this.app.screen.width / 2, y: this.app.screen.height / 2 }
-	// }
 	update(data: any, event: EVENT): void {
 		if (event == "keyboard") {
 			switch (data) {

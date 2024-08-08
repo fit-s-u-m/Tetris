@@ -17,26 +17,44 @@ export class Grid implements EventObserver {
 	shadowGrid: number[][]
 	clearRowIndex = 0
 	moveDownIndex = 0
+	scale: number
 	// protected spiralIteration = 0
 	protected spiralIndices: { i: number, j: number }[]
 
-	constructor({ x, y }: { x: number, y: number }, maxHeight: number, numCol: number, numRow: number, renderer: Renderer) {
+	constructor({ x, y }: { x: number, y: number }, scale: number, numCol: number, numRow: number, renderer: Renderer) {
 		this.numCol = numCol;
 		this.numRow = numRow;
 		const margin = numRow / numCol
-		this.fracMaxHeight = maxHeight
-		this.cellSize_ = (maxHeight * window.innerHeight - margin) / numRow
+		this.cellSize_ = Math.abs(window.innerHeight - margin - y * window.innerHeight) / numRow
+		this.cellSize_ *= scale
 		this.size = { w: numCol * this.cellSize_, h: numRow * this.cellSize_ }
 
 		this.init()
 		this.renderer = renderer
-		this.spiralIteration = 0
 
 
 		this.fracPosition = { x, y }
+		this.scale = scale
 		const xpos = x * window.innerWidth - (this.size.w) / 2
 		const ypos = y * window.innerHeight
 		this.position = { x: xpos, y: ypos }
+		const windowData = { w: window.innerWidth, h: window.innerHeight }
+
+		if (windowData.w < windowData.h) {
+			// const endPoint = this.position.y + this.cellSize_ * this.numRow
+			// const leftOverSpace = data.h - endPoint
+			// this.position.y += leftOverSpace / 2
+			this.cellSize_ = Math.abs(this.scale * windowData.w - margin - this.fracPosition.x * windowData.w) / this.numCol
+			// this.cellSize_ = Math.abs(this.fracMaxHeight * Math.min(data.h, data.w) - margin - this.fracPosition.y * data.h) / this.numRow
+			this.size = { w: this.numCol * this.cellSize_, h: this.numRow * this.cellSize_ }
+
+			const xpos = this.fracPosition.x * window.innerWidth - (this.size.w) / 2
+			const ypos = this.fracPosition.y * window.innerHeight
+
+			// this.cellSize_ = (this.fracMaxHeight * Math.min(data.h, data.w) - margin) / this.numRow
+
+			this.position = { x: xpos, y: ypos }
+		}
 		this.container = renderer.createContainer()
 		this.renderer.stage(this.container)
 	}
@@ -63,6 +81,12 @@ export class Grid implements EventObserver {
 	}
 	get cellSize() {
 		return this.cellSize_
+	}
+	calculateSidePos(grid: Grid) {
+		this.position.x = grid.position.x + grid.size.w + 40
+		this.position.y = grid.position.y
+		this.fracPosition.x = grid.fracPosition.x + grid.size.w / window.innerWidth
+		this.fracPosition.y = grid.fracPosition.y
 	}
 	redraw() {
 		this.container.removeChildren()
@@ -240,16 +264,32 @@ export class Grid implements EventObserver {
 	update(data: any, event: string) { // when resized 
 		if (event == "resize") {
 			const margin = this.numRow / this.numCol
-			this.cellSize_ = (this.fracMaxHeight * Math.min(data.h, data.w) - margin) / this.numRow
+			this.cellSize_ = Math.abs(this.scale * window.innerHeight - margin - this.fracPosition.y * window.innerHeight) / this.numRow
+			// this.cellSize_ = Math.abs(this.fracMaxHeight * Math.min(data.h, data.w) - margin - this.fracPosition.y * data.h) / this.numRow
+			this.size = { w: this.numCol * this.cellSize_, h: this.numRow * this.cellSize_ }
 
-			const xpos = this.fracPosition.x * data.w - (this.numCol * this.cellSize_) / 2
-			const ypos = this.fracPosition.y * data.h
+			const xpos = this.fracPosition.x * window.innerWidth - (this.size.w) / 2
+			const ypos = this.fracPosition.y * window.innerHeight
+
+			// this.cellSize_ = (this.fracMaxHeight * Math.min(data.h, data.w) - margin) / this.numRow
+
 			this.position = { x: xpos, y: ypos }
 
 			if (data.w < data.h) {
-				const endPoint = this.position.y + this.cellSize_ * this.numRow
-				const leftOverSpace = data.h - endPoint
-				this.position.y += leftOverSpace / 2
+				// const endPoint = this.position.y + this.cellSize_ * this.numRow
+				// const leftOverSpace = data.h - endPoint
+				// this.position.y += leftOverSpace / 2
+				this.cellSize_ = Math.abs(data.w - margin - this.fracPosition.x * data.w) / this.numCol
+				this.cellSize_ *= this.scale
+				// this.cellSize_ = Math.abs(this.fracMaxHeight * Math.min(data.h, data.w) - margin - this.fracPosition.y * data.h) / this.numRow
+				this.size = { w: this.numCol * this.cellSize_, h: this.numRow * this.cellSize_ }
+
+				const xpos = this.fracPosition.x * window.innerWidth - (this.size.w) / 2
+				const ypos = this.fracPosition.y * window.innerHeight
+
+				// this.cellSize_ = (this.fracMaxHeight * Math.min(data.h, data.w) - margin) / this.numRow
+
+				this.position = { x: xpos, y: ypos }
 			}
 			this.redraw()
 		}

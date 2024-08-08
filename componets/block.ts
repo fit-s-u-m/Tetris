@@ -1,5 +1,5 @@
 import { EventObserver } from "./eventListener"
-import { GRID, PIXICONTAINER, RENDERER, EVENT, SCORE, GAMESOUND, GROUP } from "./types"
+import { GRID, RENDERER, EVENT, GROUP } from "./types"
 
 export abstract class Block implements EventObserver {
 	id: number
@@ -15,27 +15,28 @@ export abstract class Block implements EventObserver {
 		this.grid = grid
 		this.currentOrientation
 			.forEach(pos => {
-				// let image = this.renderer.
-				// 	drawImage({
-				// 		id: this.id,
-				// 		x: this.grid.position.x + (pos.x * this.grid.cellSize),
-				// 		y: this.grid.position.y + (pos.y * this.grid.cellSize),
-				// 		width: grid.cellSize,
-				// 		height: grid.cellSize,
-				// 		container: this.container
-				// 	})
-				this.container.add(
-					this.renderer.
-						drawRoundSquare(
-							this.grid.position.x + (pos.x * this.grid.cellSize),
-							this.grid.position.y + (pos.y * this.grid.cellSize),
-							grid.cellSize,
-							this.id,
-							this.alpha
-						))
+				this.renderer.
+					drawTetromino({
+						id: this.id,
+						x: this.grid.position.x + (pos.x * this.grid.cellSize),
+						y: this.grid.position.y + (pos.y * this.grid.cellSize),
+						width: grid.cellSize,
+						height: grid.cellSize,
+						container: this.container
+					})
+				// this.container.add(
+				// 	this.renderer.
+				// 		drawRoundSquare(
+				// 			this.grid.position.x + (pos.x * this.grid.cellSize),
+				// 			this.grid.position.y + (pos.y * this.grid.cellSize),
+				// 			grid.cellSize,
+				// 			this.id,
+				// 			this.alpha
+				// 		))
 			})
 	}
 	redraw() {
+		this.container.getChildren().forEach(x => x.destroy())
 		this.container.removeChildren()
 		this.showBlock(this.grid)
 	}
