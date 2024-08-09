@@ -40,7 +40,19 @@ The game use super rotation System ([SRS](https://harddrop.com/wiki/SRS)) so you
 -  Fill a row completely to clear it and earn points.
 - The game ends when the tetrominoes stack up to the top of the playing field.
 ## Preview
-![Screenshot 2024-08-08 181438](https://github.com/user-attachments/assets/06855c0f-d0d7-4ee0-82bb-e7b5dc840aeb)
+
+
+
+![Screenshot Of the Game](https://github.com/user-attachments/assets/3c66bc1c-4853-4969-afd2-14447b4bad77)
+
+[![simple video of playing it](https://github.com/user-attachments/assets/3c66bc1c-4853-4969-afd2-14447b4bad77)](https://github.com/user-attachments/assets/81c0368b-a768-4b62-bfb0-6a332ec54ab1)
+
+Showing when it is Game Over
+
+[![simple video of showing game over](https://github.com/user-attachments/assets/3c66bc1c-4853-4969-afd2-14447b4bad77)](https://github.com/user-attachments/assets/9e5576f6-3a87-4681-880f-076f282dea91)
+
+
+
 
 
 ## Technologies Used
