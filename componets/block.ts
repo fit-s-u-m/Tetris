@@ -69,14 +69,3 @@ export abstract class Block implements EventObserver {
 		}
 	}
 }
-
-// checkLevel(score: SCORE) {
-// 	if (score.score % 50 == 0) {
-// 		this.levelUp
-// 	}
-// }
-// levelUp() {
-// 	this.speed += 1
-// 	this.normalSpeed += 1
-// 	this.maxSpeed += 1
-// }
