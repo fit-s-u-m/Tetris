@@ -55,7 +55,6 @@ export class GameSound {
 		this.levelCompletedMusic.play()
 	}
 	hardDrop() {
-		// this.hardDropMusic.play()
 		if (!this.muted)
 			this.synth[this.notePosition]
 				.triggerAttackRelease(this.notes[this.notePosition], "2n")

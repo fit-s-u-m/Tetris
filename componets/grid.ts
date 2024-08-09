@@ -175,7 +175,7 @@ export class Grid implements EventObserver {
 	async clearEntireRow(row: number) {
 		for (let i = 0; i < this.numCol; i++) {
 			this.grid[row][i] = 0; // set to empty
-			await this.sleep(10)
+			await this.sleep(30)
 			this.redraw();
 			// this.renderer.updateLoop()
 		}
@@ -201,7 +201,7 @@ export class Grid implements EventObserver {
 				this.grid[rowIndex + num][i] = rowToMove
 			}
 			this.clearRow(rowIndex)
-			await this.sleep(10);
+			await this.sleep(20);
 			this.redraw()
 			// this.renderer.updateLoop()
 		}

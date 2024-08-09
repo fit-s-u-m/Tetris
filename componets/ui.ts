@@ -9,7 +9,6 @@ export class Button implements EventObserver {
 	fracPos: { x: number, y: number }
 	size: number
 	buttonType: BUTTONTYPE
-	color: { fg: number, bg: number }
 	text: string
 	grid: GRID
 	constructor(
@@ -20,7 +19,6 @@ export class Button implements EventObserver {
 			xfrac: number,
 			text: string,
 			size: number,
-			color: { fg: number, bg: number },
 			grid: GRID,
 			onClick: () => boolean | void,
 		},
@@ -28,7 +26,6 @@ export class Button implements EventObserver {
 		this.renderer = renderer
 		this.buttonType = buttonType
 		this.fracPos = { x: options.xfrac, y: options.yfrac }
-		this.color = options.color
 		this.size = options.size
 		this.text = options.text
 		this.grid = options.grid
@@ -37,7 +34,7 @@ export class Button implements EventObserver {
 		else if (buttonType == "text-only")
 			this.createTextButton(options, shouldDestroy)
 	}
-	createButton({ yfrac, xfrac, text, size, color, onClick }, shouldDestroy: boolean = false) {
+	createButton({ yfrac, xfrac, text, size, onClick }, shouldDestroy: boolean = false) {
 		const fontSize = size / 4
 		var simpleLabel = new Konva.Label({
 			x: xfrac * (this.grid.position.x + this.grid.size.w / 2),
@@ -60,7 +57,7 @@ export class Button implements EventObserver {
 				this.button.destroy
 		})
 	}
-	createTextButton({ yfrac, xfrac, text, size, color, onClick }, shouldDestroy = false) {
+	createTextButton({ yfrac, xfrac, text, size, onClick }, shouldDestroy = false) {
 
 		const fontSize = size / 4
 		const gridRight = this.grid.position.x + this.grid.size.w - this.grid.cellSize / 2

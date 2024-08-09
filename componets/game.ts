@@ -20,7 +20,7 @@ export class Tetris implements EventObserver {
 	ghostBlock: GhostBlock
 	muted: boolean = false
 	hardPressed = false
-	particle: Particles // TODO: 
+	particle: Particles
 	gameOn = false
 	constructor() {
 		this.gameSound = new GameSound()
@@ -55,7 +55,6 @@ export class Tetris implements EventObserver {
 			xfrac: -0.5,
 			text: "start",
 			size: 150,
-			color: { fg: 8, bg: 9 },
 			grid: this.mainGrid,
 			onClick: () => {
 				this.gameSound.startMusic()
@@ -73,7 +72,6 @@ export class Tetris implements EventObserver {
 			xfrac: -1,
 			text: "mute",
 			size: 50,
-			color: { fg: 8, bg: 9 },
 			grid: this.mainGrid,
 			onClick: () => {
 				this.muted = !this.muted
@@ -127,7 +125,6 @@ export class Tetris implements EventObserver {
 			xfrac: -0.5,
 			text: "restart",
 			size: 150,
-			color: { fg: 8, bg: 9 },
 			grid: this.mainGrid,
 			onClick: () => {
 				this.mainGrid.clear()
@@ -180,7 +177,6 @@ export class Tetris implements EventObserver {
 				await this.mainGrid.clearEntireRow(row)
 				this.renderer.startLoop()
 			} else if (completed > 0) {
-				// this.particle.drawWin()
 				this.renderer.pauseLoop()
 				await this.mainGrid.moveDownRow(row, completed)
 				this.renderer.startLoop()

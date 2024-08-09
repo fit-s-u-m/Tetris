@@ -198,13 +198,6 @@ export class GhostBlock extends Block {
 			.forEach(pos => {
 				this.container.add(
 					this.renderer.
-						// drawRoundSquare(
-						// 	this.grid.position.x + (pos.x * this.grid.cellSize),
-						// 	this.grid.position.y + (pos.y * this.grid.cellSize),
-						// 	grid.cellSize,
-						// 	this.block.id,
-						// 	0.4,
-						// ))
 						drawBorder(
 							this.grid.position.x + (pos.x * this.grid.cellSize),
 							this.grid.position.y + (pos.y * this.grid.cellSize),
@@ -223,14 +216,6 @@ export class GhostBlock extends Block {
 
 		// Calculate the block's coordinates on the grid
 		const blockPos = this.block.container.position()
-		// const rows = new Set()
-		// const nextRotation = this.block.rotationState === 3 ? 0 : this.block.rotationState + 1
-		// const nextOrientation = this.orientation[nextRotation]
-		//
-		// for (const pos of nextOrientation) {
-		// 	rows.add(pos.x)
-		// }
-		// const numOfRow = rows.size
 		const blockCoord = {
 			x: Math.round(blockPos.x / this.grid.cellSize),
 			y: Math.round((blockPos.y) / this.grid.cellSize)
