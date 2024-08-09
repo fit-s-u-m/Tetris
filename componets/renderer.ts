@@ -1,6 +1,6 @@
 import { Block } from "./block"
 import { EventObserver } from "./eventListener"
-import { CALLBACK, DRAWING, EVENT, POSITION } from "./types"
+import { CALLBACK, DRAWING, EVENT, GAMESOUND, POSITION } from "./types"
 import * as  PIXI from "pixi.js"
 import Konva from "konva"
 
@@ -12,19 +12,21 @@ export class Renderer implements EventObserver {
 	private isPaused = false
 	private animation: Konva.Animation
 	private gameContext: any
-	constructor() {
+	private gameSound: GAMESOUND
+	constructor(gameSound: GAMESOUND) {
 		this.color = [
 			"#B7B7A4", // primry 
-			"#FD3F59", // I  red
-			"#4c2e5e", // T  purple
-			"#f6a432", // L  yellow
-			"#5e9786", // J  dark green
-			"#41b9df", // S  light blue
-			"#e4c397", // Z  wood color yelloish
-			"#f54c30", // o  orange
+			"#8F00FF", // I  purple
+			"#6A00FF", // T  blue
+			"#01BEFE", // L  light blue
+			"#FFDD00", // J  yellow
+			"#FF006D", // S  pink
+			"#FF7D00", // Z orange 
+			"#ADFF02", // o  green
 			"#A5A58D", // secondary 
 			"#03120E", // accent
 		]
+		this.gameSound = gameSound
 	}
 	initApp() {
 		this.app = new Konva.Stage({
@@ -35,7 +37,6 @@ export class Renderer implements EventObserver {
 		this.layer = new Konva.Layer()
 
 		this.app.add(this.layer)
-		this.drawImage("../public/assets/bg/blue 3.jpg", 0, 0, this.app.width(), this.app.height())
 	}
 	stage(drawing: any): void {
 		this.layer.add(drawing)
@@ -91,15 +92,16 @@ export class Renderer implements EventObserver {
 			strokeWidth: 1,
 		})
 	}
-	drawBorder(x: number, y: number, sx: number, sy: number, w: number): Konva.Rect {
+	drawBorder(x: number, y: number, sx: number, sy: number, w: number, c: number): Konva.Rect {
 		return new Konva.Rect({
-			x,
-			y,
-			width: sx,
-			height: sy,
-			stroke: "red",
-			cornerRadius: 10,
-			strokeWidth: 100,
+			x: x + sx * 0.05,
+			y: y + sy * 0.05,
+			width: sx * 0.9,
+			height: sy * 0.9,
+			fill: undefined,
+			stroke: this.color[c],
+			cornerRadius: 5,
+			strokeWidth: w,
 		})
 	}
 	drawSquare(x: number, y: number, s: number, c: number, alpha: number = 1): Konva.Rect {
@@ -155,7 +157,7 @@ export class Renderer implements EventObserver {
 	}
 	drawTetromino({ id, width, x, y, height, container }: { id: number, width: number, x: number, y: number, height: number, container: Konva.Group }) {
 		const tetrominos = ['I', 'T', 'L', 'J', 'S', 'Z', 'O']
-		const path = `../public/assets/tetrominos/${tetrominos[id - 1]}.jpg`
+		const path = `../public/assets/tetrominos/${tetrominos[id - 1]}.png`
 
 
 		const imageObj = new Image();
@@ -170,8 +172,6 @@ export class Renderer implements EventObserver {
 				lineJoin: "round",
 				cornerRadius: 5
 			});
-			// image.scaleX(0.95)
-			// image.scaleY(0.95)
 			container.add(image)
 
 		}; imageObj.src = path
@@ -186,11 +186,13 @@ export class Renderer implements EventObserver {
 		this.animation.stop()
 		this.gameContext.gameOn = false
 		this.gameContext.currentBlock.isGameOn = false
+		this.gameSound.pause()
 	}
 	startLoop() {
 		this.animation.start()
 		this.gameContext.gameOn = true
 		this.gameContext.currentBlock.isGameOn = true
+		this.gameSound.play()
 	}
 	update(data: any, event: EVENT): void {
 		if (event == "keyboard") {
@@ -198,10 +200,8 @@ export class Renderer implements EventObserver {
 				case "p":
 					if (this.isPaused) {
 						this.startLoop()
-						// this.sound.homeTheme.play()
 					}
 					else {
-						// this.sound.homeTheme.stop()
 						this.pauseLoop()
 					}
 					this.isPaused = !this.isPaused

@@ -39,6 +39,7 @@ export class MainBlock extends Block {
 			position.x -= this.grid.cellSize
 			this.container.setPosition(position)
 			this.ghost.shadow()
+			this.gameSound.playNote()
 		}
 	}
 	moveRight() {
@@ -47,6 +48,7 @@ export class MainBlock extends Block {
 			position.x += this.grid.cellSize
 			this.container.setPosition(position)
 			this.ghost.shadow()
+			this.gameSound.playNote()
 		}
 	}
 
@@ -196,12 +198,20 @@ export class GhostBlock extends Block {
 			.forEach(pos => {
 				this.container.add(
 					this.renderer.
-						drawRoundSquare(
+						// drawRoundSquare(
+						// 	this.grid.position.x + (pos.x * this.grid.cellSize),
+						// 	this.grid.position.y + (pos.y * this.grid.cellSize),
+						// 	grid.cellSize,
+						// 	this.block.id,
+						// 	0.4,
+						// ))
+						drawBorder(
 							this.grid.position.x + (pos.x * this.grid.cellSize),
 							this.grid.position.y + (pos.y * this.grid.cellSize),
 							grid.cellSize,
-							this.id,
-							0.8
+							grid.cellSize,
+							2,
+							this.block.id,
 						))
 			})
 	}

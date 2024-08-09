@@ -18,6 +18,7 @@ export class Grid implements EventObserver {
 	clearRowIndex = 0
 	moveDownIndex = 0
 	scale: number
+	staticBlock: GROUP
 	// protected spiralIteration = 0
 	protected spiralIndices: { i: number, j: number }[]
 
@@ -56,7 +57,9 @@ export class Grid implements EventObserver {
 			this.position = { x: xpos, y: ypos }
 		}
 		this.container = renderer.createContainer()
+		this.staticBlock = renderer.createContainer()
 		this.renderer.stage(this.container)
+		this.renderer.stage(this.staticBlock)
 	}
 	get grid() {
 		return this.grid_
@@ -69,13 +72,26 @@ export class Grid implements EventObserver {
 	show() {
 		for (const [rowIndex, row] of this.grid_.entries()) {
 			for (const [colIndex, val] of row.entries()) {
-				const square = this.renderer
-					.drawSquare(
-						colIndex * this.cellSize_ + this.position.x,
-						rowIndex * this.cellSize_ + this.position.y,
-						this.cellSize_,
-						val)
-				this.container.add(square)
+				if (val == 0 || val == 8) {
+					const square = this.renderer
+						.drawSquare(
+							colIndex * this.cellSize_ + this.position.x,
+							rowIndex * this.cellSize_ + this.position.y,
+							this.cellSize_,
+							val)
+					this.container.add(square)
+				}
+				else {
+					this.renderer.drawTetromino({
+						id: val,
+						x: this.position.x + (colIndex * this.cellSize),
+						y: this.position.y + (rowIndex * this.cellSize),
+						width: this.cellSize,
+						height: this.cellSize,
+						container: this.container
+					})
+				}
+				// this.container.add(square)
 			}
 		}
 	}
@@ -89,6 +105,7 @@ export class Grid implements EventObserver {
 		this.fracPosition.y = grid.fracPosition.y
 	}
 	redraw() {
+		this.container.getChildren().forEach(x => x.destroy())
 		this.container.removeChildren()
 		this.show()
 	}
@@ -158,7 +175,7 @@ export class Grid implements EventObserver {
 	async clearEntireRow(row: number) {
 		for (let i = 0; i < this.numCol; i++) {
 			this.grid[row][i] = 0; // set to empty
-			await this.sleep(30)
+			await this.sleep(10)
 			this.redraw();
 			// this.renderer.updateLoop()
 		}
@@ -184,9 +201,9 @@ export class Grid implements EventObserver {
 				this.grid[rowIndex + num][i] = rowToMove
 			}
 			this.clearRow(rowIndex)
+			await this.sleep(10);
 			this.redraw()
 			// this.renderer.updateLoop()
-			await this.sleep(20);
 		}
 
 	}
@@ -232,6 +249,7 @@ export class Grid implements EventObserver {
 		return result;
 	}
 	async drawSpiral() {
+		this.staticBlock.removeChildren()
 		let spiralIteration = 0
 
 		while (spiralIteration < this.numRow * this.numCol) {

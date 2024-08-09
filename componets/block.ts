@@ -24,15 +24,6 @@ export abstract class Block implements EventObserver {
 						height: grid.cellSize,
 						container: this.container
 					})
-				// this.container.add(
-				// 	this.renderer.
-				// 		drawRoundSquare(
-				// 			this.grid.position.x + (pos.x * this.grid.cellSize),
-				// 			this.grid.position.y + (pos.y * this.grid.cellSize),
-				// 			grid.cellSize,
-				// 			this.id,
-				// 			this.alpha
-				// 		))
 			})
 	}
 	redraw() {

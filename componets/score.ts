@@ -54,7 +54,7 @@ export class Score implements EventObserver {
 
 		this.renderer = renderer
 	}
-	calculateScore(numLineCleared: number, block: MainBlock) {
+	calculateScore(numLineCleared: number, block: MainBlock, sound: GAMESOUND) {
 		let muliplier: number
 		if (numLineCleared == 1) {
 			muliplier = 40
@@ -73,6 +73,7 @@ export class Score implements EventObserver {
 		this.clearLineNum.setAttr('text', `${this.numLineCleared}`)
 		if (this.numLineCleared % 10 == 0) {
 			block.normalSpeed += this.level / 2 // TODO: make reasonable speed
+			sound.levelCompleted()
 			this.levelUP()
 		}
 	}
@@ -88,6 +89,10 @@ export class Score implements EventObserver {
 	}
 	levelUP() {
 		this.levelTextNum.setAttr('text', `${++this.level}`)
+	}
+	setLevelValue(num: number) {
+		this.level = num
+		this.levelTextNum.setAttr('text', `${num}`)
 	}
 	update(data: any, event: EVENT): void {
 		if (event == "resize") {

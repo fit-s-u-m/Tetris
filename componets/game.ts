@@ -23,9 +23,9 @@ export class Tetris implements EventObserver {
 	particle: Particles // TODO: 
 	gameOn = false
 	constructor() {
-		this.renderer = new Renderer()
-		this.eventListener = new EventListener()
 		this.gameSound = new GameSound()
+		this.renderer = new Renderer(this.gameSound)
+		this.eventListener = new EventListener()
 		this.init()
 	}
 	private init() {
@@ -131,17 +131,17 @@ export class Tetris implements EventObserver {
 			grid: this.mainGrid,
 			onClick: () => {
 				this.mainGrid.clear()
+
 				this.currentBlock.container.show()
 				this.nextBlock.container.show()
 				this.ghostBlock.container.show()
+
 				this.ghostBlock.shadow()
-				this.mainGrid.container.show()
-				this.currentBlock.speed = this.currentBlock.normalSpeed
-				this.renderer.gameLoop(this.gameLoop, this)
 				this.gameOn = true
 				this.gameSound.startMusic()
-				this.score.level = 1
-				this.score.levelUP()
+				this.score.setLevelValue(1)// reset the level
+				this.currentBlock.speed = this.currentBlock.normalSpeed  // reset the speed
+				this.renderer.gameLoop(this.gameLoop, this)
 			}
 		}, true)
 		this.listenEvents([
@@ -150,7 +150,6 @@ export class Tetris implements EventObserver {
 	}
 	async newGeneration() {
 		if (this.hardPressed) {
-			this.gameSound.hardDrop()
 			this.mainGrid.addBlock(this.ghostBlock);
 			this.hardPress(true)// toogle is back off
 		}
@@ -160,8 +159,10 @@ export class Tetris implements EventObserver {
 		this.gameSound.crash()
 		// clear a row
 		this.ghostBlock.container.hide()
+		this.currentBlock.container.hide()
 		await this.clearRow() // check and clear row
 		this.ghostBlock.container.show()
+		this.currentBlock.container.show()
 
 		this.currentBlock.createNew(this.nextBlock)
 		this.ghostBlock.shadow()
@@ -187,7 +188,7 @@ export class Tetris implements EventObserver {
 
 		}
 		if (completed != 0) {
-			this.score.calculateScore(completed, this.currentBlock)
+			this.score.calculateScore(completed, this.currentBlock, this.gameSound)
 			this.gameSound.collectPoint()// make sound
 		}
 		return completed
@@ -208,7 +209,7 @@ export class Tetris implements EventObserver {
 		});
 
 		window.addEventListener('keydown', (event) => {
-			event.preventDefault()
+			// event.preventDefault()
 			const data = event.key
 			this.eventListener.notifyEventObserver(data, "keyboard")
 		});
