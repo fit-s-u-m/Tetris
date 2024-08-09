@@ -39,9 +39,12 @@ The game use super rotation System ([SRS](https://harddrop.com/wiki/SRS)) so you
    - **j** to increase the speed to move
 -  Fill a row completely to clear it and earn points.
 - The game ends when the tetrominoes stack up to the top of the playing field.
+## Preview
+![Screenshot 2024-08-08 181438](https://github.com/user-attachments/assets/06855c0f-d0d7-4ee0-82bb-e7b5dc840aeb)
+
 
 ## Technologies Used
-- Pixi.js: For rendering graphics
+- Konva.js: For rendering graphics
 - Typescript: Game logic
 - HTML/CSS: Interface and styling
 - bun: For development server and dependency management
