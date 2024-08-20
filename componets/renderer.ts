@@ -155,7 +155,7 @@ export class Renderer implements EventObserver {
 	}
 	drawTetromino({ id, width, x, y, height, container }: { id: number, width: number, x: number, y: number, height: number, container: Konva.Group }) {
 		const tetrominos = ['I', 'T', 'L', 'J', 'S', 'Z', 'O']
-		const path = `/assets/tetrominos/${tetrominos[id - 1]}.png`
+		const path = `/Tetris/assets/tetrominos/${tetrominos[id - 1]}.png`
 
 
 		const imageObj = new Image();

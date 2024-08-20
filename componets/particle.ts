@@ -12,8 +12,8 @@ export class Particles {
 
 	constructor() {
 		this.urls = {
-			win: "/assets/particles/win.json",
-			home: "/assets/particles/home.json"
+			win: "Tetris/assets/particles/win.json",
+			home: "/Tetris/assets/particles/home.json"
 		}
 	}
 	async init() {
