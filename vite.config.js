@@ -1,5 +1,8 @@
 // vite.config.js
 export default {
-	base: 'Tetris', // Replace with your repository name
+	base: '/Tetris/', // Replace with your repository name
+	build: {
+		outDir: 'dist',
+	},
 };
 

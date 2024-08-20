@@ -1,5 +1,5 @@
 import { EventObserver } from "./eventListener"
-import { EVENT, GAMESOUND, POSITION } from "./types"
+import { EVENT, GAMESOUND } from "./types"
 import Konva from "konva"
 
 
