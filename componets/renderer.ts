@@ -115,30 +115,6 @@ export class Renderer implements EventObserver {
 		})
 
 	}
-	makeTextStyle(fontSize: number, color: string): PIXI.TextStyle {
-		const style = new PIXI.TextStyle({
-			fontFamily: 'Arial',
-			fontSize: fontSize,
-			fontWeight: 'bold',
-			fill: color,
-			stroke: { color: '#000', width: fontSize / 20, join: 'round' },
-			dropShadow: {
-				color: '#000',
-				blur: 3,
-				angle: Math.PI / 6,
-				distance: 3,
-			},
-			wordWrap: true,
-			wordWrapWidth: 440,
-		});
-		return style
-
-	}
-	drawCircle(x: number, y: number, r: number, c: number) {
-		return new PIXI.Graphics()
-			.circle(x, y, r)
-			.fill(this.color[c])
-	}
 	drawImage(path: string, x: number, y: number, width: number, height: number) {
 		const imageObj = new Image();
 		imageObj.onload = () => {
