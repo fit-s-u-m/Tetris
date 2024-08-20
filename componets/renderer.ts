@@ -184,8 +184,10 @@ export class Renderer implements EventObserver {
 		this.animation.stop()
 		this.gameContext.gameOn = false
 		this.gameContext.currentBlock.isGameOn = false
-		this.gameSound.pause()
-		this.gameContext.score.pause()
+		if (this.isPaused) {
+			this.gameSound.pause()
+			this.gameContext.score.pause()
+		}
 	}
 	startLoop() {
 		this.animation.start()
@@ -199,12 +201,13 @@ export class Renderer implements EventObserver {
 			switch (data) {
 				case "p":
 					if (this.isPaused) {
+						this.isPaused = !this.isPaused
 						this.startLoop()
 					}
 					else {
+						this.isPaused = !this.isPaused
 						this.pauseLoop()
 					}
-					this.isPaused = !this.isPaused
 					break
 			}
 		}
