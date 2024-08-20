@@ -8,6 +8,7 @@ export class Score implements EventObserver {
 	levelText: TEXT
 	clearLineNum: TEXT
 	clearLineText: TEXT
+	pauseText: TEXT
 	nextText: TEXT
 	score: number
 	level: number
@@ -23,19 +24,24 @@ export class Score implements EventObserver {
 		const gridRight = mainGrid.position.x + mainGrid.size.w
 		const gridLeft = mainGrid.position.x
 		const gridBottom = mainGrid.position.y + mainGrid.cellSize * (mainGrid.numRow - 2)
-		const gridMidY = mainGrid.position.y + mainGrid.size.h / 2
 		const gridMidX = mainGrid.position.x + mainGrid.size.w / 2
 		const previewGridX = previewGrid.position.x
+		const previewGridY = previewGrid.position.y + previewGrid.size.h
 
 
 		this.scoreTextNum = renderer.drawText("0", gridMidX, 0, this.fontSize, renderer.color[color])
 		this.scoreText = renderer.drawText("Score", gridLeft, 0, this.fontSize, renderer.color[8])
+
 		this.levelTextNum = renderer.drawText("1", gridRight, gridBottom + this.fontSize, this.fontSize, renderer.color[8])
 		this.levelText = renderer.drawText("Level ", gridRight, gridBottom, this.fontSize, renderer.color[8])
+
 		this.clearLineText = renderer.drawText('clearLine', gridLeft, gridBottom, this.fontSize, renderer.color[8])
 		const clearLineTextwidth = this.clearLineText.getTextWidth()
 		this.clearLineText.setAttr("x", gridLeft - clearLineTextwidth)
 		this.clearLineNum = renderer.drawText(this.numLineCleared.toString(), gridLeft - clearLineTextwidth / 2, gridBottom + this.fontSize, this.fontSize, renderer.color[8])
+
+		this.pauseText = renderer.drawText('paused', previewGridX, previewGridY, this.fontSize, renderer.color[9])
+		this.pauseText.setAttr('visible', false)
 
 		this.nextText = renderer.drawText("Next", previewGridX, 0, this.fontSize, renderer.color[8])
 
@@ -49,6 +55,7 @@ export class Score implements EventObserver {
 		renderer.stage(this.clearLineNum)
 		renderer.stage(this.clearLineText)
 		renderer.stage(this.nextText)
+		renderer.stage(this.pauseText)
 		this.mainGrid = mainGrid
 		this.previewGrid = previewGrid
 
@@ -76,6 +83,13 @@ export class Score implements EventObserver {
 			sound.levelCompleted()
 			this.levelUP()
 		}
+	}
+	pause() {
+		this.pauseText.setAttr('visible', true)
+
+	}
+	play() {
+		this.pauseText.setAttr('visible', false)
 	}
 	subPoint(x: number) {
 		if (this.score - x >= 0) {
@@ -106,11 +120,17 @@ export class Score implements EventObserver {
 			const gridRight = this.mainGrid.position.x + this.mainGrid.size.w
 			const gridLeft = this.mainGrid.position.x
 			const gridBottom = this.mainGrid.position.y + this.mainGrid.cellSize * (this.mainGrid.numRow - 2)
-			const gridMidY = this.mainGrid.position.y + this.mainGrid.size.h / 2
 			const gridMidX = this.mainGrid.position.x + this.mainGrid.size.w / 2
 			const previewGridX = this.previewGrid.position.x
+			const previewGridY = this.previewGrid.position.y + this.previewGrid.size.h
 			this.clearLineText.setAttr("fontSize", this.fontSize)
 			const clearLineTextwidth = this.clearLineText.getWidth()
+
+			this.pauseText.setAttrs({
+				x: previewGridX,
+				y: previewGridY,
+				fontSize: this.fontSize,
+			})
 
 
 			this.scoreTextNum.setAttrs({

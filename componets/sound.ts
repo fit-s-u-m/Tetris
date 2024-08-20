@@ -16,17 +16,17 @@ export class GameSound {
 
 		this.synth = this.notes.map(() => new Tone.Synth({ volume: -15, }).toDestination())
 
-		this.homeTheme = new Audio("../public/assets/sound/tetris theme.mp3")
+		this.homeTheme = new Audio("/assets/sound/tetris theme.mp3")
 
-		this.crashMusic = new Audio("../public/assets/sound/ding.mp3")
+		this.crashMusic = new Audio("/assets/sound/ding.mp3")
 		this.crashMusic.volume = 0.2
 
 		this.collectPointMusic = new Audio("/assets/sound/collect-points.mp3")
 		this.collectPointMusic.volume = 0.2
 
-		this.gameOverMusic = new Audio("../public/assets/sound/game-over.mp3")
+		this.gameOverMusic = new Audio("/assets/sound/game-over.mp3")
 		this.gameOverMusic.volume = 0.2
-		this.levelCompletedMusic = new Audio("../public/assets/sound/levelUp.mp3")
+		this.levelCompletedMusic = new Audio("/assets/sound/levelUp.mp3")
 		this.levelCompletedMusic.volume = 0.5
 
 	}

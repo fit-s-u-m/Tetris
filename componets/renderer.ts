@@ -1,7 +1,5 @@
-import { Block } from "./block"
 import { EventObserver } from "./eventListener"
-import { CALLBACK, DRAWING, EVENT, GAMESOUND, POSITION } from "./types"
-import * as  PIXI from "pixi.js"
+import { EVENT, GAMESOUND, POSITION } from "./types"
 import Konva from "konva"
 
 
@@ -157,7 +155,7 @@ export class Renderer implements EventObserver {
 	}
 	drawTetromino({ id, width, x, y, height, container }: { id: number, width: number, x: number, y: number, height: number, container: Konva.Group }) {
 		const tetrominos = ['I', 'T', 'L', 'J', 'S', 'Z', 'O']
-		const path = `../public/assets/tetrominos/${tetrominos[id - 1]}.png`
+		const path = `/assets/tetrominos/${tetrominos[id - 1]}.png`
 
 
 		const imageObj = new Image();
@@ -187,12 +185,14 @@ export class Renderer implements EventObserver {
 		this.gameContext.gameOn = false
 		this.gameContext.currentBlock.isGameOn = false
 		this.gameSound.pause()
+		this.gameContext.score.pause()
 	}
 	startLoop() {
 		this.animation.start()
 		this.gameContext.gameOn = true
 		this.gameContext.currentBlock.isGameOn = true
 		this.gameSound.play()
+		this.gameContext.score.play()
 	}
 	update(data: any, event: EVENT): void {
 		if (event == "keyboard") {

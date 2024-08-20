@@ -16,5 +16,8 @@
     "@tsparticles/all": "^3.5.0",
     "konva": "^9.3.14",
     "tone": "^15.0.4"
-  }
+  },
+  "trustedDependencies": [
+    "@tsparticles/engine"
+  ]
 }
