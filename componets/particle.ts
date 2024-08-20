@@ -1,10 +1,8 @@
-import { RENDERER, POSITION } from "./types";
-import * as PIXI from "pixi.js";
+import { RENDERER } from "./types";
 import { tsParticles } from "@tsparticles/engine";
 import * as particle from "@tsparticles/all";
 
 export class Particles {
-	container: PIXI.Container;
 	renderer: RENDERER;
 	mesh: any;
 	geometry: any;
@@ -14,8 +12,8 @@ export class Particles {
 
 	constructor() {
 		this.urls = {
-			win: "../public/assets/particles/win.json",
-			home: "../public/assets/particles/home.json"
+			win: "/assets/particles/win.json",
+			home: "/assets/particles/home.json"
 		}
 	}
 	async init() {
